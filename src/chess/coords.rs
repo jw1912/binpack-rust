@@ -33,10 +33,6 @@ impl FlatSquareOffset {
     pub const fn neg(&self) -> Self {
         Self { value: -self.value }
     }
-
-    pub const fn to_i8(&self) -> i8 {
-        self.value
-    }
 }
 
 impl std::ops::Neg for FlatSquareOffset {
@@ -147,7 +143,7 @@ impl Add<FlatSquareOffset> for Square {
 
     fn add(self, rhs: FlatSquareOffset) -> Square {
         Self {
-            index: (self.index as i32 + rhs.to_i8() as i32) as u32,
+            index: (self.index as i32 + rhs.value as i32) as u32,
         }
     }
 }
@@ -189,10 +185,6 @@ impl File {
         Self { index }
     }
 
-    pub const fn to_u32(&self) -> u32 {
-        self.index
-    }
-
     pub const fn from_u32(index: u32) -> Self {
         Self { index }
     }
@@ -216,10 +208,6 @@ impl Rank {
 
     pub const fn new(index: u32) -> Self {
         Self { index }
-    }
-
-    pub const fn to_u32(&self) -> u32 {
-        self.index
     }
 
     pub const fn from_u32(index: u32) -> Self {
