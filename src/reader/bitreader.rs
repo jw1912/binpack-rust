@@ -1,5 +1,3 @@
-use crate::binpack_error::{BinpackError, Result};
-
 #[derive(Debug)]
 pub struct BitReader<'a> {
     movetext: &'a [u8],
@@ -16,9 +14,9 @@ impl<'a> BitReader<'a> {
         }
     }
 
-    pub fn extract_bits_le8(&mut self, count: usize) -> Result<u8> {
+    pub fn extract_bits_le8(&mut self, count: usize) -> u8 {
         if count == 0 {
-            return Ok(0);
+            return 0;
         }
 
         if self.read_bits_left == 0 {
@@ -26,9 +24,7 @@ impl<'a> BitReader<'a> {
             self.read_bits_left = 8;
         }
 
-        if self.read_offset >= self.movetext.len() {
-            return Err(BinpackError::InvalidFormat("Unexpected end of data".into()));
-        }
+        debug_assert!(self.read_offset < self.movetext.len());
 
         let byte = self.movetext[self.read_offset] << (8 - self.read_bits_left);
         let mut bits = byte >> (8 - count);
@@ -42,16 +38,16 @@ impl<'a> BitReader<'a> {
         }
 
         self.read_bits_left -= count;
-        Ok(bits)
+        bits
     }
 
-    pub fn extract_vle16(&mut self, block_size: usize) -> Result<u16> {
+    pub fn extract_vle16(&mut self, block_size: usize) -> u16 {
         let mask = (1 << block_size) - 1;
         let mut v = 0u16;
         let mut offset = 0;
 
         loop {
-            let block = self.extract_bits_le8(block_size + 1)? as u16;
+            let block = self.extract_bits_le8(block_size + 1) as u16;
             v |= (block & mask) << offset;
             if (block >> block_size) == 0 {
                 break;
@@ -59,7 +55,7 @@ impl<'a> BitReader<'a> {
             offset += block_size;
         }
 
-        Ok(v)
+        v
     }
 
     pub fn num_read_bytes(&self) -> usize {

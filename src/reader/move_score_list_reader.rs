@@ -1,5 +1,4 @@
 use crate::arithmetic::{nth_set_bit_index, unsigned_to_signed};
-use crate::binpack_error::Result;
 
 use crate::chess::attacks::Attacks;
 use crate::chess::bitboard::Bitboard;
@@ -64,12 +63,11 @@ impl<'a> PackedMoveScoreListReader<'a> {
 
         let piece_id = self
             .reader
-            .extract_bits_le8(used_bits_safe(our_pieces.count() as u64))
-            .unwrap();
+            .extract_bits_le8(used_bits_safe(our_pieces.count() as u64));
 
-        let move_ = self.decode_move(piece_id, occupied).unwrap();
+        let move_ = self.decode_move(piece_id, occupied);
 
-        let delta = unsigned_to_signed(self.reader.extract_vle16(SCORE_VLE_BLOCK_SIZE).unwrap());
+        let delta = unsigned_to_signed(self.reader.extract_vle16(SCORE_VLE_BLOCK_SIZE));
 
         let score = self.last_score.wrapping_add(delta);
         self.last_score = -score;
@@ -79,7 +77,7 @@ impl<'a> PackedMoveScoreListReader<'a> {
         (move_, score)
     }
 
-    fn decode_move(&mut self, piece_id: u8, occupied: Bitboard) -> Result<Move> {
+    fn decode_move(&mut self, piece_id: u8, occupied: Bitboard) -> Move {
         let pos = &self.entry.pos;
 
         let side_to_move = pos.side_to_move();
@@ -136,27 +134,27 @@ impl<'a> PackedMoveScoreListReader<'a> {
                 if from.rank() == promotion_rank {
                     let move_id = self
                         .reader
-                        .extract_bits_le8(used_bits_safe((destinations_count * 4) as u64))?;
+                        .extract_bits_le8(used_bits_safe((destinations_count * 4) as u64));
                     let pt =
                         PieceType::from_ordinal(PieceType::Knight.ordinal() + (move_id % 4) as u8);
                     let promoted_piece = Piece::new(pt, side_to_move);
                     let to =
                         Square::new(nth_set_bit_index(destinations.to_u64(), move_id as u64 / 4));
 
-                    Ok(Move::promotion(from, to, promoted_piece))
+                    Move::promotion(from, to, promoted_piece)
                 } else {
                     let move_id = self
                         .reader
-                        .extract_bits_le8(used_bits_safe(destinations_count as u64))?;
+                        .extract_bits_le8(used_bits_safe(destinations_count as u64));
 
                     let idx = nth_set_bit_index(destinations.to_u64(), move_id as u64);
 
                     let to = Square::new(idx);
 
                     if to == ep_square {
-                        Ok(Move::en_passant(from, to))
+                        Move::en_passant(from, to)
                     } else {
-                        Ok(Move::normal(from, to))
+                        Move::normal(from, to)
                     }
                 }
             }
@@ -177,10 +175,7 @@ impl<'a> PackedMoveScoreListReader<'a> {
                     (castling_rights & our_castling_rights_mask).count_ones() as usize;
 
                 let offset = attacks_size as usize + num_castlings;
-                let move_id = self
-                    .reader
-                    .extract_bits_le8(used_bits_safe(offset as u64))?
-                    as u32;
+                let move_id = self.reader.extract_bits_le8(used_bits_safe(offset as u64)) as u32;
 
                 if move_id >= attacks_size {
                     let idx = move_id - attacks_size;
@@ -195,10 +190,10 @@ impl<'a> PackedMoveScoreListReader<'a> {
                         CastleType::Short
                     };
 
-                    Ok(Move::from_castle(castle_type, side_to_move))
+                    Move::from_castle(castle_type, side_to_move)
                 } else {
                     let to = Square::new(nth_set_bit_index(attacks.to_u64(), move_id as u64));
-                    Ok(Move::normal(from, to))
+                    Move::normal(from, to)
                 }
             }
 
@@ -207,10 +202,10 @@ impl<'a> PackedMoveScoreListReader<'a> {
                 let attacks = Attacks::piece_attacks(piece_type, from, occupied) & !our_pieces;
                 let move_id = self
                     .reader
-                    .extract_bits_le8(used_bits_safe(attacks.count() as u64))?;
+                    .extract_bits_le8(used_bits_safe(attacks.count() as u64));
                 let idx = nth_set_bit_index(attacks.to_u64(), move_id as u64);
                 let to = Square::new(idx);
-                Ok(Move::normal(from, to))
+                Move::normal(from, to)
             }
         }
     }
