@@ -12,4 +12,4 @@ RUSTFLAGS="-C target-feature=+bmi2" cargo build --release
 
 ## Performance Comparison
 
-Idk
+Slightly faster when compiled with bmi2 because of _pdep_u64 trick which is missing in the upstream version.
