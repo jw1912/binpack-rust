@@ -1,0 +1,243 @@
+use crate::arithmetic::{nth_set_bit_index, unsigned_to_signed};
+use crate::binpack_error::Result;
+
+use crate::chess::attacks::Attacks;
+use crate::chess::bitboard::Bitboard;
+use crate::chess::castling_rights::{CastleType, CastlingRights, CastlingTraits};
+use crate::chess::color::Color;
+use crate::chess::coords::Rank;
+use crate::chess::coords::{FlatSquareOffset, Square};
+use crate::chess::piece::Piece;
+use crate::chess::piecetype::PieceType;
+use crate::chess::r#move::Move;
+
+use super::bitreader::BitReader;
+use super::training_data_reader::TrainingDataEntry;
+
+#[derive(Debug)]
+pub struct PackedMoveScoreListReader<'a> {
+    reader: BitReader<'a>,
+    last_score: i16,
+    num_plies: u16,
+    num_read_plies: u16,
+    entry: TrainingDataEntry,
+}
+
+impl<'a> PackedMoveScoreListReader<'a> {
+    pub fn new(entry: TrainingDataEntry, movetext: &'a [u8], num_plies: u16) -> Self {
+        Self {
+            reader: BitReader::new(movetext),
+            num_plies,
+            entry,
+            num_read_plies: 0,
+            last_score: -entry.score,
+        }
+    }
+
+    pub fn has_next(&self) -> bool {
+        self.num_read_plies < self.num_plies
+    }
+
+    pub fn next_entry(&mut self) -> TrainingDataEntry {
+        self.entry.pos.do_move(self.entry.mv);
+        let (mv, score) = self.next_move_score();
+        self.entry.mv = mv;
+        self.entry.score = score;
+        self.entry.ply += 1;
+        self.entry.result = -self.entry.result;
+        return self.entry;
+    }
+
+    pub fn next_move_score(&mut self) -> (Move, i16) {
+        const SCORE_VLE_BLOCK_SIZE: usize = 4;
+
+        // if !self.has_next() {
+        //     return Ok(None);
+        // }
+
+        let pos = &self.entry.pos;
+
+        let side_to_move = pos.side_to_move();
+        let our_pieces = pos.pieces_bb(side_to_move);
+        let their_pieces = pos.pieces_bb(!side_to_move);
+        let occupied = our_pieces | their_pieces;
+
+        let piece_id = self
+            .reader
+            .extract_bits_le8(used_bits_safe(our_pieces.count() as u64))
+            .unwrap();
+
+        let move_ = self.decode_move(piece_id, occupied).unwrap();
+
+        let delta = unsigned_to_signed(self.reader.extract_vle16(SCORE_VLE_BLOCK_SIZE).unwrap());
+
+        let score = self.last_score.wrapping_add(delta);
+        self.last_score = -score;
+
+        self.num_read_plies += 1;
+
+        (move_, score)
+    }
+
+    fn decode_move(&mut self, piece_id: u8, occupied: Bitboard) -> Result<Move> {
+        let pos = &self.entry.pos;
+
+        let side_to_move = pos.side_to_move();
+        let our_pieces = pos.pieces_bb(side_to_move);
+        let idx = nth_set_bit_index(our_pieces.to_u64(), piece_id as u64);
+
+        let from = Square::new(idx);
+
+        let piece_type = pos.piece_at(from).piece_type();
+
+        match piece_type {
+            PieceType::Pawn => {
+                let promotion_rank = if side_to_move == Color::White {
+                    Rank::Seventh
+                } else {
+                    Rank::Second
+                };
+                let start_rank = if side_to_move == Color::White {
+                    Rank::Second
+                } else {
+                    Rank::Seventh
+                };
+                let forward = if side_to_move == Color::White {
+                    FlatSquareOffset::new(0, 1)
+                } else {
+                    FlatSquareOffset::new(0, -1)
+                };
+
+                let ep_square = pos.ep_square();
+                let their_pieces = pos.pieces_bb(!side_to_move);
+
+                let mut attack_targets = their_pieces;
+                if ep_square != Square::NONE {
+                    attack_targets |= Bitboard::from_square(ep_square);
+                }
+
+                let mut destinations = Attacks::pawn(side_to_move, from) & attack_targets;
+
+                let sq_forward = from + forward;
+                if !occupied.sq_set(sq_forward) {
+                    destinations |= Bitboard::from_square(sq_forward);
+
+                    // Add double push if on starting rank
+                    if from.rank() == start_rank {
+                        let sq_forward2 = sq_forward + forward;
+                        if !occupied.sq_set(sq_forward2) {
+                            destinations |= Bitboard::from_square(sq_forward2);
+                        }
+                    }
+                }
+
+                let destinations_count = destinations.count();
+
+                if from.rank() == promotion_rank {
+                    let move_id = self
+                        .reader
+                        .extract_bits_le8(used_bits_safe((destinations_count * 4) as u64))?;
+                    let pt =
+                        PieceType::from_ordinal(PieceType::Knight.ordinal() + (move_id % 4) as u8);
+                    let promoted_piece = Piece::new(pt, side_to_move);
+                    let to =
+                        Square::new(nth_set_bit_index(destinations.to_u64(), move_id as u64 / 4));
+
+                    Ok(Move::promotion(from, to, promoted_piece))
+                } else {
+                    let move_id = self
+                        .reader
+                        .extract_bits_le8(used_bits_safe(destinations_count as u64))?;
+
+                    let idx = nth_set_bit_index(destinations.to_u64(), move_id as u64);
+
+                    let to = Square::new(idx);
+
+                    if to == ep_square {
+                        Ok(Move::en_passant(from, to))
+                    } else {
+                        Ok(Move::normal(from, to))
+                    }
+                }
+            }
+
+            PieceType::King => {
+                let our_castling_rights_mask = if side_to_move == Color::White {
+                    CastlingRights::WHITE
+                } else {
+                    CastlingRights::BLACK
+                };
+
+                let castling_rights = pos.castling_rights();
+
+                let attacks = Attacks::king(from) & !our_pieces;
+                let attacks_size = attacks.count();
+
+                let num_castlings =
+                    (castling_rights & our_castling_rights_mask).count_ones() as usize;
+
+                let offset = attacks_size as usize + num_castlings;
+                let move_id = self
+                    .reader
+                    .extract_bits_le8(used_bits_safe(offset as u64))?
+                    as u32;
+
+                if move_id >= attacks_size {
+                    let idx = move_id - attacks_size;
+
+                    let castle_type = if idx == 0
+                        && castling_rights.contains(CastlingTraits::castling_rights(
+                            side_to_move,
+                            CastleType::Long,
+                        )) {
+                        CastleType::Long
+                    } else {
+                        CastleType::Short
+                    };
+
+                    Ok(Move::from_castle(castle_type, side_to_move))
+                } else {
+                    let to = Square::new(nth_set_bit_index(attacks.to_u64(), move_id as u64));
+                    Ok(Move::normal(from, to))
+                }
+            }
+
+            // All other pieces (Queen, Rook, Bishop, Knight)
+            _ => {
+                let attacks = Attacks::piece_attacks(piece_type, from, occupied) & !our_pieces;
+                let move_id = self
+                    .reader
+                    .extract_bits_le8(used_bits_safe(attacks.count() as u64))?;
+                let idx = nth_set_bit_index(attacks.to_u64(), move_id as u64);
+                let to = Square::new(idx);
+                Ok(Move::normal(from, to))
+            }
+        }
+    }
+
+    pub fn num_read_bytes(&self) -> usize {
+        self.reader.num_read_bytes()
+    }
+}
+
+// Helper functions
+fn used_bits_safe(n: u64) -> usize {
+    if n == 0 {
+        return 0;
+    }
+
+    used_bits(n - 1) as usize
+}
+
+fn used_bits(n: u64) -> u64 {
+    if n == 0 {
+        return 0;
+    }
+
+    msb(n) as u64 + 1
+}
+
+fn msb(n: u64) -> u32 {
+    assert!(n != 0);
+    63 ^ n.leading_zeros()
+}

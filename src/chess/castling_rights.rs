@@ -1,0 +1,81 @@
+use std::ops::{BitAndAssign, BitOrAssign, Not};
+
+use super::color::Color;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CastleType {
+    Short,
+    Long,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CastlingRights(u8);
+
+impl CastlingRights {
+    pub const NONE: Self = Self(0x0);
+    pub const WHITE_KING_SIDE: Self = Self(0x1);
+    pub const WHITE_QUEEN_SIDE: Self = Self(0x2);
+    pub const BLACK_KING_SIDE: Self = Self(0x4);
+    pub const BLACK_QUEEN_SIDE: Self = Self(0x8);
+    pub const WHITE: Self = Self(Self::WHITE_KING_SIDE.0 | Self::WHITE_QUEEN_SIDE.0);
+    pub const BLACK: Self = Self(Self::BLACK_KING_SIDE.0 | Self::BLACK_QUEEN_SIDE.0);
+    pub const ALL: Self = Self(
+        Self::WHITE_KING_SIDE.0
+            | Self::WHITE_QUEEN_SIDE.0
+            | Self::BLACK_KING_SIDE.0
+            | Self::BLACK_QUEEN_SIDE.0,
+    );
+
+    pub fn empty() -> Self {
+        Self(0)
+    }
+
+    pub fn contains(&self, other: CastlingRights) -> bool {
+        (self.0 & other.0) == other.0
+    }
+
+    pub fn count_ones(&self) -> u32 {
+        self.0.count_ones()
+    }
+}
+
+impl std::ops::BitAnd for CastlingRights {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self {
+        Self(self.0 & rhs.0)
+    }
+}
+
+pub struct CastlingTraits;
+
+impl CastlingTraits {
+    pub fn castling_rights(color: Color, castle_type: CastleType) -> CastlingRights {
+        match (color, castle_type) {
+            (Color::White, CastleType::Short) => CastlingRights::WHITE_KING_SIDE,
+            (Color::White, CastleType::Long) => CastlingRights::WHITE_QUEEN_SIDE,
+            (Color::Black, CastleType::Short) => CastlingRights::BLACK_KING_SIDE,
+            (Color::Black, CastleType::Long) => CastlingRights::BLACK_QUEEN_SIDE,
+        }
+    }
+}
+
+impl Not for CastlingRights {
+    type Output = Self;
+
+    fn not(self) -> Self {
+        Self(!self.0)
+    }
+}
+
+impl BitAndAssign for CastlingRights {
+    fn bitand_assign(&mut self, rhs: Self) {
+        self.0 &= rhs.0;
+    }
+}
+
+impl BitOrAssign for CastlingRights {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0;
+    }
+}
