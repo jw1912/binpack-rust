@@ -46,7 +46,7 @@ impl Bitboard {
         Self { data }
     }
 
-    pub fn to_u64(&self) -> u64 {
+    pub fn bits(&self) -> u64 {
         self.data
     }
 

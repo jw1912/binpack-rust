@@ -82,7 +82,7 @@ impl<'a> PackedMoveScoreListReader<'a> {
 
         let side_to_move = pos.side_to_move();
         let our_pieces = pos.pieces_bb(side_to_move);
-        let idx = nth_set_bit_index(our_pieces.to_u64(), piece_id as u64);
+        let idx = nth_set_bit_index(our_pieces.bits(), piece_id as u64);
 
         let from = Square::new(idx);
 
@@ -139,7 +139,7 @@ impl<'a> PackedMoveScoreListReader<'a> {
                         PieceType::from_ordinal(PieceType::Knight.ordinal() + (move_id % 4) as u8);
                     let promoted_piece = Piece::new(pt, side_to_move);
                     let to =
-                        Square::new(nth_set_bit_index(destinations.to_u64(), move_id as u64 / 4));
+                        Square::new(nth_set_bit_index(destinations.bits(), move_id as u64 / 4));
 
                     Move::promotion(from, to, promoted_piece)
                 } else {
@@ -147,7 +147,7 @@ impl<'a> PackedMoveScoreListReader<'a> {
                         .reader
                         .extract_bits_le8(used_bits_safe(destinations_count as u64));
 
-                    let idx = nth_set_bit_index(destinations.to_u64(), move_id as u64);
+                    let idx = nth_set_bit_index(destinations.bits(), move_id as u64);
 
                     let to = Square::new(idx);
 
@@ -192,7 +192,7 @@ impl<'a> PackedMoveScoreListReader<'a> {
 
                     Move::from_castle(castle_type, side_to_move)
                 } else {
-                    let to = Square::new(nth_set_bit_index(attacks.to_u64(), move_id as u64));
+                    let to = Square::new(nth_set_bit_index(attacks.bits(), move_id as u64));
                     Move::normal(from, to)
                 }
             }
@@ -203,7 +203,7 @@ impl<'a> PackedMoveScoreListReader<'a> {
                 let move_id = self
                     .reader
                     .extract_bits_le8(used_bits_safe(attacks.count() as u64));
-                let idx = nth_set_bit_index(attacks.to_u64(), move_id as u64);
+                let idx = nth_set_bit_index(attacks.bits(), move_id as u64);
                 let to = Square::new(idx);
                 Move::normal(from, to)
             }

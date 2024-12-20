@@ -176,22 +176,22 @@ impl HyperbolaQsc {
     pub fn bishop_attack(&self, sq: Square, occupied: Bitboard) -> Bitboard {
         let sq_idx = sq.index();
         Bitboard::from_u64(
-            self.diagonal_attack(occupied.to_u64(), sq_idx)
-                | self.antidiagonal_attack(occupied.to_u64(), sq_idx),
+            self.diagonal_attack(occupied.bits(), sq_idx)
+                | self.antidiagonal_attack(occupied.bits(), sq_idx),
         )
     }
 
     pub fn rook_attack(&self, sq: Square, occupied: Bitboard) -> Bitboard {
         let sq_idx = sq.index();
         Bitboard::from_u64(
-            self.vertical_attack(occupied.to_u64(), sq_idx)
-                | self.horizontal_attack(occupied.to_u64(), sq_idx),
+            self.vertical_attack(occupied.bits(), sq_idx)
+                | self.horizontal_attack(occupied.bits(), sq_idx),
         )
     }
 
     // pub fn queen_attack(&self, sq: Square, occupied: Bitboard) -> Bitboard {
     //     Bitboard::from_u64(
-    //         self.bishop_attack(sq, occupied).to_u64() | self.rook_attack(sq, occupied).to_u64(),
+    //         self.bishop_attack(sq, occupied).bits() | self.rook_attack(sq, occupied).bits(),
     //     )
     // }
 }

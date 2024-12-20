@@ -24,7 +24,7 @@ impl Attacks {
     }
 
     pub fn queen(sq: Square, occupied: Bitboard) -> Bitboard {
-        Bitboard::from_u64(Self::bishop(sq, occupied).to_u64() | Self::rook(sq, occupied).to_u64())
+        Bitboard::from_u64(Self::bishop(sq, occupied).bits() | Self::rook(sq, occupied).bits())
     }
 
     pub fn king(sq: Square) -> Bitboard {
@@ -321,11 +321,11 @@ mod tests {
     #[test]
     fn test_bishop_mask() {
         assert_eq!(
-            Attacks::bishop(Square::new(27), Bitboard::new(0)).to_u64(),
+            Attacks::bishop(Square::new(27), Bitboard::new(0)).bits(),
             9241705379636978241
         );
         assert_eq!(
-            Attacks::rook(Square::new(27), Bitboard::new(0)).to_u64(),
+            Attacks::rook(Square::new(27), Bitboard::new(0)).bits(),
             578721386714368008
         );
     }

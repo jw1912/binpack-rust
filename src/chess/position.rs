@@ -189,7 +189,7 @@ impl Position {
             let enemy_mask = self.pieces_bb_color(!self.stm, PieceType::Pawn);
 
             // enemy pawn can pseudo capture the pawn
-            if (ep_mask & enemy_mask).to_u64() > 0 {
+            if (ep_mask & enemy_mask).bits() > 0 {
                 // check if enemy pawn can legally capture the pawn
                 // play the move
 
@@ -197,8 +197,8 @@ impl Position {
                 let mut enemy_mask = ep_mask & enemy_mask;
 
                 while enemy_mask != Bitboard::new(0) {
-                    let enemy_sq = Square::new(enemy_mask.to_u64().trailing_zeros());
-                    enemy_mask = enemy_mask & Bitboard::new(enemy_mask.to_u64() - 1);
+                    let enemy_sq = Square::new(enemy_mask.bits().trailing_zeros());
+                    enemy_mask = enemy_mask & Bitboard::new(enemy_mask.bits() - 1);
 
                     // move the enemy pawn
                     let enemy_pawn = self.piece_at(enemy_sq);
@@ -394,22 +394,22 @@ impl Position {
     }
 
     pub fn is_attacked(&self, sq: Square, c: Color) -> bool {
-        if (Attacks::pawn(!c, sq) & self.pieces_bb_color(c, PieceType::Pawn)).to_u64() > 0 {
+        if (Attacks::pawn(!c, sq) & self.pieces_bb_color(c, PieceType::Pawn)).bits() > 0 {
             return true;
         }
 
-        if (Attacks::knight(sq) & self.pieces_bb_color(c, PieceType::Knight)).to_u64() > 0 {
+        if (Attacks::knight(sq) & self.pieces_bb_color(c, PieceType::Knight)).bits() > 0 {
             return true;
         }
 
-        if (Attacks::king(sq) & self.pieces_bb_color(c, PieceType::King)).to_u64() > 0 {
+        if (Attacks::king(sq) & self.pieces_bb_color(c, PieceType::King)).bits() > 0 {
             return true;
         }
 
         if (Attacks::bishop(sq, self.occupied())
             & (self.pieces_bb_color(c, PieceType::Bishop)
                 | self.pieces_bb_color(c, PieceType::Queen)))
-        .to_u64()
+        .bits()
             > 0
         {
             return true;
@@ -418,7 +418,7 @@ impl Position {
         if (Attacks::rook(sq, self.occupied())
             & (self.pieces_bb_color(c, PieceType::Rook)
                 | self.pieces_bb_color(c, PieceType::Queen)))
-        .to_u64()
+        .bits()
             > 0
         {
             return true;
@@ -430,7 +430,7 @@ impl Position {
     pub fn king_sq(&self, c: Color) -> Square {
         Square::new(
             self.pieces_bb_color(c, PieceType::King)
-                .to_u64()
+                .bits()
                 .trailing_zeros(),
         )
     }
