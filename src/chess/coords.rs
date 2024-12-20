@@ -67,7 +67,7 @@ impl Square {
     pub const H8: Self = Self { index: 63 };
 
     pub const fn new(index: u32) -> Self {
-        assert!(index < 64);
+        debug_assert!(index < 64);
         Self { index }
     }
 

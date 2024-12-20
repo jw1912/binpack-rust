@@ -50,8 +50,8 @@ impl Move {
     }
 
     pub fn new(from: Square, to: Square, move_type: MoveType, promoted_piece: Piece) -> Self {
-        assert!(from.to_u32() < 64);
-        assert!(to.to_u32() < 64);
+        debug_assert!(from.to_u32() < 64);
+        debug_assert!(to.to_u32() < 64);
 
         Self {
             from,

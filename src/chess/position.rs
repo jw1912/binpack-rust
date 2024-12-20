@@ -44,7 +44,7 @@ impl Position {
     pub fn pieces_bb(&self, color: Color) -> Bitboard {
         let bb = Bitboard::new(self.bb_color[color as usize]);
 
-        assert!(bb.count() > 0);
+        debug_assert!(bb.count() > 0);
 
         bb
     }
@@ -56,7 +56,7 @@ impl Position {
     }
 
     pub fn piece_at(&self, square: Square) -> Piece {
-        assert!(square != Square::NONE);
+        debug_assert!(square != Square::NONE);
         let sq_bb = 1u64 << square.to_u32();
 
         for pt in 0..6 {
@@ -83,7 +83,7 @@ impl Position {
     }
 
     pub fn do_move(&mut self, mv: Move) {
-        assert!(self.bb[PieceType::King.ordinal() as usize].count_ones() == 2);
+        debug_assert!(self.bb[PieceType::King.ordinal() as usize].count_ones() == 2);
 
         let from = mv.from();
         let to = mv.to();
@@ -91,9 +91,9 @@ impl Position {
         let captured = self.piece_at(to);
         let genuine_capture = captured != Piece::none() && mv.mtype() != MoveType::Castle;
 
-        assert!(from != Square::NONE);
-        assert!(to != Square::NONE);
-        assert!(piece != Piece::none());
+        debug_assert!(from != Square::NONE);
+        debug_assert!(to != Square::NONE);
+        debug_assert!(piece != Piece::none());
 
         // update state
 
@@ -125,7 +125,7 @@ impl Position {
         }
 
         if mv.mtype() == MoveType::EnPassant {
-            assert!(piece.piece_type() == PieceType::Pawn,);
+            debug_assert!(piece.piece_type() == PieceType::Pawn,);
 
             let captured_sq = Square::new(to.to_u32() ^ 8);
             self.toggle(!self.stm, self.piece_at(captured_sq), captured_sq);
@@ -186,7 +186,7 @@ impl Position {
             let enemy_mask = self.pieces_bb_color(!self.stm, PieceType::Pawn);
 
             // enemy pawn can pseudo capture the pawn
-            if (ep_mask & enemy_mask).count() > 0 {
+            if (ep_mask & enemy_mask).to_u64() > 0 {
                 // check if enemy pawn can legally capture the pawn
                 // play the move
 
@@ -228,7 +228,7 @@ impl Position {
         // Switch side to move
         self.stm = !self.stm;
 
-        assert!(self.bb[PieceType::King.ordinal() as usize].count_ones() == 2);
+        debug_assert!(self.bb[PieceType::King.ordinal() as usize].count_ones() == 2);
     }
 
     fn update_castling_rights(&mut self, from: Square, to: Square) {
@@ -282,8 +282,8 @@ impl Position {
     }
 
     pub fn place(&mut self, pc: Piece, sq: Square) {
-        assert!(pc != Piece::none());
-        assert!(sq != Square::NONE);
+        debug_assert!(pc != Piece::none());
+        debug_assert!(sq != Square::NONE);
 
         let mask = 1u64 << (sq.to_u32());
         self.bb_color[pc.color() as usize] |= mask;
@@ -291,8 +291,8 @@ impl Position {
     }
 
     fn toggle(&mut self, side: Color, pc: Piece, sq: Square) {
-        assert!(pc != Piece::none());
-        assert!(sq != Square::NONE);
+        debug_assert!(pc != Piece::none());
+        debug_assert!(sq != Square::NONE);
 
         let mask = 1u64 << (sq.to_u32());
         self.bb_color[side as usize] ^= mask;
@@ -390,22 +390,22 @@ impl Position {
     }
 
     pub fn is_attacked(&self, sq: Square, c: Color) -> bool {
-        if (Attacks::pawn(!c, sq) & self.pieces_bb_color(c, PieceType::Pawn)).count() > 0 {
+        if (Attacks::pawn(!c, sq) & self.pieces_bb_color(c, PieceType::Pawn)).to_u64() > 0 {
             return true;
         }
 
-        if (Attacks::knight(sq) & self.pieces_bb_color(c, PieceType::Knight)).count() > 0 {
+        if (Attacks::knight(sq) & self.pieces_bb_color(c, PieceType::Knight)).to_u64() > 0 {
             return true;
         }
 
-        if (Attacks::king(sq) & self.pieces_bb_color(c, PieceType::King)).count() > 0 {
+        if (Attacks::king(sq) & self.pieces_bb_color(c, PieceType::King)).to_u64() > 0 {
             return true;
         }
 
         if (Attacks::bishop(sq, self.occupied())
             & (self.pieces_bb_color(c, PieceType::Bishop)
                 | self.pieces_bb_color(c, PieceType::Queen)))
-        .count()
+        .to_u64()
             > 0
         {
             return true;
@@ -414,7 +414,7 @@ impl Position {
         if (Attacks::rook(sq, self.occupied())
             & (self.pieces_bb_color(c, PieceType::Rook)
                 | self.pieces_bb_color(c, PieceType::Queen)))
-        .count()
+        .to_u64()
             > 0
         {
             return true;

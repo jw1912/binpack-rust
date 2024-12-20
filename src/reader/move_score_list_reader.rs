@@ -238,6 +238,6 @@ fn used_bits(n: u64) -> u64 {
 }
 
 fn msb(n: u64) -> u32 {
-    assert!(n != 0);
+    debug_assert!(n != 0);
     63 ^ n.leading_zeros()
 }

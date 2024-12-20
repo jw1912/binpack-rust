@@ -86,7 +86,9 @@ impl CompressedTrainingDataEntryReader {
         // Read packed entry
         let mut packed = PackedTrainingDataEntry::default();
 
-        assert!(self.offset + std::mem::size_of::<PackedTrainingDataEntry>() <= self.chunk.len());
+        debug_assert!(
+            self.offset + std::mem::size_of::<PackedTrainingDataEntry>() <= self.chunk.len()
+        );
 
         packed.copy_from_slice(
             &self.chunk[self.offset..self.offset + std::mem::size_of::<PackedTrainingDataEntry>()],

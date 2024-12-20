@@ -109,8 +109,8 @@ impl CompressedMove {
             let to = self.to();
             let promoted_piece = self.promoted_piece();
 
-            assert!(from != Square::NONE);
-            assert!(to != Square::NONE);
+            debug_assert!(from != Square::NONE);
+            debug_assert!(to != Square::NONE);
 
             Move::new(from, to, move_type, promoted_piece)
         }

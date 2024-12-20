@@ -22,7 +22,7 @@ impl Piece {
     pub const None: Piece = Piece::none();
 
     pub const fn from_id(id: i32) -> Self {
-        assert!(id >= 0 && id < 13);
+        debug_assert!(id >= 0 && id < 13);
         Self { id: id as u8 }
     }
 
