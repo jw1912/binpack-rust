@@ -95,20 +95,6 @@ impl Position {
         debug_assert!(to != Square::NONE);
         debug_assert!(piece != Piece::none());
 
-        // update state
-
-        // Update halfmove clock
-        if genuine_capture || piece.piece_type() == PieceType::Pawn {
-            self.halfm = 0;
-        } else {
-            self.halfm += 1;
-        }
-
-        // Update fullmove number
-        if self.stm == Color::Black {
-            self.fullm += 1;
-        }
-
         // clear piece from start
         self.toggle(self.stm, piece, from);
 
@@ -120,18 +106,15 @@ impl Position {
         if mv.mtype() == MoveType::Promotion {
             let promotion = mv.promoted_piece();
             self.toggle(self.stm, promotion, to);
-        } else if mv.mtype() != MoveType::Castle {
-            self.toggle(self.stm, piece, to);
-        }
-
-        if mv.mtype() == MoveType::EnPassant {
+        } else if mv.mtype() == MoveType::EnPassant {
             debug_assert!(piece.piece_type() == PieceType::Pawn,);
 
             let captured_sq = Square::new(to.to_u32() ^ 8);
             self.toggle(!self.stm, self.piece_at(captured_sq), captured_sq);
-        }
-
-        if mv.mtype() == MoveType::Castle {
+            self.toggle(self.stm, piece, to);
+        } else if mv.mtype() == MoveType::Normal {
+            self.toggle(self.stm, piece, to);
+        } else if mv.mtype() == MoveType::Castle {
             if mv.castle_type() == CastleType::Short {
                 let rook_to = if self.stm == Color::White {
                     Square::F1
@@ -169,6 +152,20 @@ impl Position {
                 self.toggle(self.stm, rook, rook_to);
                 self.toggle(self.stm, piece, king_to);
             }
+        }
+
+        // update state
+
+        // Update halfmove clock
+        if genuine_capture || piece.piece_type() == PieceType::Pawn {
+            self.halfm = 0;
+        } else {
+            self.halfm += 1;
+        }
+
+        // Update fullmove number
+        if self.stm == Color::Black {
+            self.fullm += 1;
         }
 
         self.update_castling_rights(from, to);
@@ -290,6 +287,7 @@ impl Position {
         self.bb[pc.piece_type().ordinal() as usize] |= mask;
     }
 
+    #[inline(always)]
     fn toggle(&mut self, side: Color, pc: Piece, sq: Square) {
         debug_assert!(pc != Piece::none());
         debug_assert!(sq != Square::NONE);

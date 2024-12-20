@@ -8,6 +8,8 @@ pub struct Bitboard {
 }
 
 impl Bitboard {
+    #[must_use]
+    #[inline(always)]
     pub fn count(&self) -> u32 {
         self.data.count_ones()
     }

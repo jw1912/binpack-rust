@@ -14,8 +14,6 @@ fn main() {
     let mut count: u64 = 0;
     let mut stats: u64 = 0;
 
-    debug_assert!(false);
-
     let t0 = std::time::Instant::now();
 
     while reader.has_next() {
