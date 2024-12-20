@@ -47,16 +47,16 @@ impl PackedPosition {
                 12 => {
                     let rank = sq.rank();
                     if rank == Rank::FOURTH {
-                        pos.place(Piece::WhitePawn, sq);
+                        pos.place(Piece::WHITE_PAWN, sq);
                         pos.set_ep_square_unchecked(sq + FlatSquareOffset::new(0, -1));
                     } else {
                         // rank == Rank::FIFTH
-                        pos.place(Piece::BlackPawn, sq);
+                        pos.place(Piece::BLACK_PAWN, sq);
                         pos.set_ep_square_unchecked(sq + FlatSquareOffset::new(0, 1));
                     }
                 }
                 13 => {
-                    pos.place(Piece::WhiteRook, sq);
+                    pos.place(Piece::WHITE_ROOK, sq);
                     if sq == Square::A1 {
                         pos.add_castling_rights(CastlingRights::WHITE_QUEEN_SIDE);
                     } else {
@@ -65,7 +65,7 @@ impl PackedPosition {
                     }
                 }
                 14 => {
-                    pos.place(Piece::BlackRook, sq);
+                    pos.place(Piece::BLACK_ROOK, sq);
                     if sq == Square::A8 {
                         pos.add_castling_rights(CastlingRights::BLACK_QUEEN_SIDE);
                     } else {
@@ -74,7 +74,7 @@ impl PackedPosition {
                     }
                 }
                 15 => {
-                    pos.place(Piece::BlackKing, sq);
+                    pos.place(Piece::BLACK_KING, sq);
                     pos.set_side_to_move(Color::Black);
                 }
                 _ => unreachable!(),

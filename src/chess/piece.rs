@@ -6,20 +6,20 @@ pub struct Piece {
 }
 
 impl Piece {
-    pub const WhitePawn: Piece = Piece::new(PieceType::Pawn, Color::White);
-    pub const WhiteKnight: Piece = Piece::new(PieceType::Knight, Color::White);
-    pub const WhiteBishop: Piece = Piece::new(PieceType::Bishop, Color::White);
-    pub const WhiteRook: Piece = Piece::new(PieceType::Rook, Color::White);
-    pub const WhiteQueen: Piece = Piece::new(PieceType::Queen, Color::White);
-    pub const WhiteKing: Piece = Piece::new(PieceType::King, Color::White);
+    pub const WHITE_PAWN: Piece = Piece::new(PieceType::Pawn, Color::White);
+    pub const WHITE_KNIGHT: Piece = Piece::new(PieceType::Knight, Color::White);
+    pub const WHITE_BISHOP: Piece = Piece::new(PieceType::Bishop, Color::White);
+    pub const WHITE_ROOK: Piece = Piece::new(PieceType::Rook, Color::White);
+    pub const WHITE_QUEEN: Piece = Piece::new(PieceType::Queen, Color::White);
+    pub const WHITE_KING: Piece = Piece::new(PieceType::King, Color::White);
 
-    pub const BlackPawn: Piece = Piece::new(PieceType::Pawn, Color::Black);
-    pub const BlackKnight: Piece = Piece::new(PieceType::Knight, Color::Black);
-    pub const BlackBishop: Piece = Piece::new(PieceType::Bishop, Color::Black);
-    pub const BlackRook: Piece = Piece::new(PieceType::Rook, Color::Black);
-    pub const BlackQueen: Piece = Piece::new(PieceType::Queen, Color::Black);
-    pub const BlackKing: Piece = Piece::new(PieceType::King, Color::Black);
-    pub const None: Piece = Piece::none();
+    pub const BLACK_PAWN: Piece = Piece::new(PieceType::Pawn, Color::Black);
+    pub const BLACK_KNIGHT: Piece = Piece::new(PieceType::Knight, Color::Black);
+    pub const BLACK_BISHOP: Piece = Piece::new(PieceType::Bishop, Color::Black);
+    pub const BLACK_ROOK: Piece = Piece::new(PieceType::Rook, Color::Black);
+    pub const BLACK_QUEEN: Piece = Piece::new(PieceType::Queen, Color::Black);
+    pub const BLACK_KING: Piece = Piece::new(PieceType::King, Color::Black);
+    pub const NONE: Piece = Piece::none();
 
     pub const fn from_id(id: i32) -> Self {
         debug_assert!(id >= 0 && id < 13);
