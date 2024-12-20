@@ -1,5 +1,5 @@
 use std::{
-    fmt,
+    fmt::{self},
     ops::{Add, Sub},
 };
 
@@ -85,7 +85,7 @@ impl Square {
 
     #[must_use]
     pub const fn index(self) -> u32 {
-        self.index as u32
+        self.index
     }
 
     #[must_use]
@@ -104,7 +104,7 @@ impl Square {
         let offset = files + ranks * FILE_CARDINALITY;
         let new_index = self.index as i32 + offset;
 
-        (0..64).contains(&new_index).then(|| Self {
+        (0..64).contains(&new_index).then_some(Self {
             index: new_index as u32,
         })
     }
@@ -124,10 +124,11 @@ impl Square {
             Self::NONE
         }
     }
+}
 
-    #[must_use]
-    pub fn to_string(&self) -> String {
-        format!("{}{}", self.file().to_string(), self.rank().to_string())
+impl fmt::Display for Square {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}{}", self.file(), self.rank())
     }
 }
 
@@ -156,7 +157,7 @@ impl Sub<Square> for Square {
 
     fn sub(self, rhs: Square) -> Square {
         let res = self.index as i32 - rhs.index as i32;
-        debug_assert!(res >= 0 && res < 64);
+        debug_assert!((0..64).contains(&res));
 
         Self {
             index: (res) as u32,
@@ -195,20 +196,11 @@ impl File {
     pub const fn from_u32(index: u32) -> Self {
         Self { index }
     }
+}
 
-    pub fn to_string(&self) -> String {
-        match self.index {
-            0 => "a",
-            1 => "b",
-            2 => "c",
-            3 => "d",
-            4 => "e",
-            5 => "f",
-            6 => "g",
-            7 => "h",
-            _ => panic!(""),
-        }
-        .to_string()
+impl fmt::Display for File {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", (b'a' + self.index as u8) as char)
     }
 }
 

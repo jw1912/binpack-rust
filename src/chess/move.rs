@@ -154,7 +154,7 @@ impl Move {
     }
 
     pub fn as_uci(&self) -> String {
-        let mut uci = format!("{}{}", self.from.to_string(), self.to.to_string());
+        let mut uci = format!("{}{}", self.from, self.to);
 
         if self.move_type == MoveType::Promotion {
             uci.push(match self.promoted_piece.piece_type() {
