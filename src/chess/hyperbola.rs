@@ -174,7 +174,7 @@ impl HyperbolaQsc {
     }
 
     pub fn bishop_attack(&self, sq: Square, occupied: Bitboard) -> Bitboard {
-        let sq_idx = sq.to_u32();
+        let sq_idx = sq.index();
         Bitboard::from_u64(
             self.diagonal_attack(occupied.to_u64(), sq_idx)
                 | self.antidiagonal_attack(occupied.to_u64(), sq_idx),
@@ -182,7 +182,7 @@ impl HyperbolaQsc {
     }
 
     pub fn rook_attack(&self, sq: Square, occupied: Bitboard) -> Bitboard {
-        let sq_idx = sq.to_u32();
+        let sq_idx = sq.index();
         Bitboard::from_u64(
             self.vertical_attack(occupied.to_u64(), sq_idx)
                 | self.horizontal_attack(occupied.to_u64(), sq_idx),

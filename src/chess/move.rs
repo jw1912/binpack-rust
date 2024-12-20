@@ -50,8 +50,8 @@ impl Move {
     }
 
     pub fn new(from: Square, to: Square, move_type: MoveType, promoted_piece: Piece) -> Self {
-        debug_assert!(from.to_u32() < 64);
-        debug_assert!(to.to_u32() < 64);
+        debug_assert!(from.index() < 64);
+        debug_assert!(to.index() < 64);
 
         Self {
             from,
@@ -153,7 +153,7 @@ impl Move {
         }
     }
 
-    pub fn to_uci(&self) -> String {
+    pub fn as_uci(&self) -> String {
         let mut uci = format!("{}{}", self.from.to_string(), self.to.to_string());
 
         if self.move_type == MoveType::Promotion {

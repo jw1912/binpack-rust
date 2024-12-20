@@ -25,7 +25,7 @@ fn main() {
 
         // println!("entry:");
         // println!("{}", entry.pos.fen());
-        // println!("{:?}", entry.mv.to_uci());
+        // println!("{:?}", entry.mv.as_uci());
         // println!("score {}", entry.score);
         // println!("ply {}", entry.ply);
         // println!("result {}", entry.result);

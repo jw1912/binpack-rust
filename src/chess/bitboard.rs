@@ -35,7 +35,7 @@ impl Bitboard {
     }
 
     pub fn sq_set(&self, index: Square) -> bool {
-        self.data & (1 << index.to_u32()) != 0
+        self.data & (1 << index.index()) != 0
     }
 
     pub const fn new(bits: u64) -> Self {
@@ -58,7 +58,7 @@ impl Bitboard {
 
     pub fn from_square(index: Square) -> Self {
         Self {
-            data: 1 << index.to_u32(),
+            data: 1 << index.index(),
         }
     }
 
@@ -102,7 +102,7 @@ impl Iterator for BitboardIterator {
         } else {
             let index = self.remaining.trailing_zeros();
             self.remaining &= self.remaining - 1;
-            Some(Square::from_u32(index))
+            Some(Square::new(index))
         }
     }
 }

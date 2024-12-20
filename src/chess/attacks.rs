@@ -8,11 +8,11 @@ pub struct Attacks;
 
 impl Attacks {
     pub fn pawn(color: Color, sq: Square) -> Bitboard {
-        Bitboard::new(PAWN_ATTACKS[color as usize][sq.to_u32() as usize])
+        Bitboard::new(PAWN_ATTACKS[color as usize][sq.index() as usize])
     }
 
     pub fn knight(sq: Square) -> Bitboard {
-        Bitboard::new(KNIGHT_ATTACKS[sq.to_u32() as usize])
+        Bitboard::new(KNIGHT_ATTACKS[sq.index() as usize])
     }
 
     pub fn bishop(sq: Square, occupied: Bitboard) -> Bitboard {
@@ -28,7 +28,7 @@ impl Attacks {
     }
 
     pub fn king(sq: Square) -> Bitboard {
-        Bitboard::new(KING_ATTACKS[sq.to_u32() as usize])
+        Bitboard::new(KING_ATTACKS[sq.index() as usize])
     }
 
     pub fn piece_attacks(pt: PieceType, sq: Square, occupied: Bitboard) -> Bitboard {

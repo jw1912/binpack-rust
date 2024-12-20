@@ -1,4 +1,7 @@
-use std::ops::{Add, Sub};
+use std::{
+    fmt,
+    ops::{Add, Sub},
+};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct FlatSquareOffset {
@@ -66,65 +69,65 @@ impl Square {
     pub const G8: Self = Self { index: 62 };
     pub const H8: Self = Self { index: 63 };
 
+    #[must_use]
     pub const fn new(index: u32) -> Self {
         debug_assert!(index < 64);
         Self { index }
     }
 
-    pub const fn to_u32(&self) -> u32 {
-        self.index
-    }
-
-    pub const fn from_u32(index: u32) -> Self {
-        Self { index }
-    }
-
-    pub const fn to_i32(&self) -> i32 {
-        self.index as i32
-    }
-
-    pub const fn file(&self) -> File {
-        File::new(self.index & 7)
-    }
-
-    pub const fn rank(&self) -> Rank {
-        Rank::new(self.index >> 3)
-    }
-
-    pub fn offset(&self, files: i32, ranks: i32) -> Option<Self> {
-        const FILE_CARDINALITY: i32 = 8;
-
-        let offset = files + ranks * FILE_CARDINALITY;
-
-        let new_index = self.index as i32 + offset;
-        if (0..64).contains(&new_index) {
-            Some(Self {
-                index: new_index as u32,
-            })
-        } else {
-            None
+    #[must_use]
+    pub const fn from_i32(index: i32) -> Self {
+        debug_assert!(index >= 0 && index < 64);
+        Self {
+            index: index as u32,
         }
     }
 
+    #[must_use]
+    pub const fn index(self) -> u32 {
+        self.index as u32
+    }
+
+    #[must_use]
+    pub const fn file(self) -> File {
+        File::new(self.index & 7)
+    }
+
+    #[must_use]
+    pub const fn rank(self) -> Rank {
+        Rank::new(self.index >> 3)
+    }
+
+    #[must_use]
+    pub fn offset(self, files: i32, ranks: i32) -> Option<Self> {
+        const FILE_CARDINALITY: i32 = 8;
+        let offset = files + ranks * FILE_CARDINALITY;
+        let new_index = self.index as i32 + offset;
+
+        (0..64).contains(&new_index).then(|| Self {
+            index: new_index as u32,
+        })
+    }
+
+    #[must_use]
     pub const fn is_valid(r: i64, f: i64) -> bool {
         r >= 0 && r < 8 && f >= 0 && f < 8
     }
 
+    #[must_use]
     pub const fn from_rank_file(r: i64, f: i64) -> Self {
         if Self::is_valid(r, f) {
             Self {
                 index: (r * 8 + f) as u32,
             }
         } else {
-            Square::NONE
+            Self::NONE
         }
     }
 
+    #[must_use]
     pub fn to_string(&self) -> String {
-        let file = self.file();
-        let rank = self.rank();
-
-        format!("{}{}", file.to_string(), rank.to_string())
+        format!("{}{}", self.file().to_string(), self.rank().to_string())
     }
 }
 
@@ -132,9 +135,8 @@ impl Add<Square> for Square {
     type Output = Square;
 
     fn add(self, rhs: Square) -> Square {
-        let new_index = self.index as i32 + rhs.index as i32;
         Self {
-            index: new_index as u32,
+            index: (self.index as i32 + rhs.index as i32) as u32,
         }
     }
 }
@@ -143,9 +145,8 @@ impl Add<FlatSquareOffset> for Square {
     type Output = Square;
 
     fn add(self, rhs: FlatSquareOffset) -> Square {
-        let new_index = self.index as i32 + rhs.to_i8() as i32;
         Self {
-            index: new_index as u32,
+            index: (self.index as i32 + rhs.to_i8() as i32) as u32,
         }
     }
 }
@@ -154,9 +155,11 @@ impl Sub<Square> for Square {
     type Output = Square;
 
     fn sub(self, rhs: Square) -> Square {
-        let new_index = self.index as i32 - rhs.index as i32;
+        let res = self.index as i32 - rhs.index as i32;
+        debug_assert!(res >= 0 && res < 64);
+
         Self {
-            index: new_index as u32,
+            index: (res) as u32,
         }
     }
 }
@@ -230,19 +233,10 @@ impl Rank {
     pub const fn from_u32(index: u32) -> Self {
         Self { index }
     }
+}
 
-    pub fn to_string(&self) -> String {
-        match self.index {
-            0 => "1",
-            1 => "2",
-            2 => "3",
-            3 => "4",
-            4 => "5",
-            5 => "6",
-            6 => "7",
-            7 => "8",
-            _ => panic!(""),
-        }
-        .to_string()
+impl fmt::Display for Rank {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.index + 1)
     }
 }

@@ -61,7 +61,7 @@ impl Position {
 
     pub fn piece_at(&self, square: Square) -> Piece {
         debug_assert!(square != Square::NONE);
-        let sq_bb = 1u64 << square.to_u32();
+        let sq_bb = 1u64 << square.index();
 
         for pt in 0..6 {
             if (self.bb[pt] & sq_bb) != 0 {
@@ -113,7 +113,7 @@ impl Position {
         } else if mv.mtype() == MoveType::EnPassant {
             debug_assert!(piece.piece_type() == PieceType::Pawn,);
 
-            let captured_sq = Square::new(to.to_u32() ^ 8);
+            let captured_sq = Square::new(to.index() ^ 8);
             self.toggle(!self.stm, self.piece_at(captured_sq), captured_sq);
             self.toggle(self.stm, piece, to);
         } else if mv.mtype() == MoveType::Normal {
@@ -177,8 +177,10 @@ impl Position {
         self.enpassant = Square::NONE;
 
         // Update en passant square
-        if piece.piece_type() == PieceType::Pawn && (to.to_i32() - from.to_i32()).abs() == 16 {
-            let ep = Square::new(to.to_u32() ^ 8);
+        if piece.piece_type() == PieceType::Pawn
+            && (to.index() as i32 - from.index() as i32).abs() == 16
+        {
+            let ep = Square::new(to.index() ^ 8);
 
             // check if enemy pawn can legally capture the pawn
             // if so set the ep square
@@ -286,7 +288,7 @@ impl Position {
         debug_assert!(pc != Piece::none());
         debug_assert!(sq != Square::NONE);
 
-        let mask = 1u64 << (sq.to_u32());
+        let mask = 1u64 << (sq.index());
         self.bb_color[pc.color() as usize] |= mask;
         self.bb[pc.piece_type().ordinal() as usize] |= mask;
     }
@@ -296,7 +298,7 @@ impl Position {
         debug_assert!(pc != Piece::none());
         debug_assert!(sq != Square::NONE);
 
-        let mask = 1u64 << (sq.to_u32());
+        let mask = 1u64 << (sq.index());
         self.bb_color[side as usize] ^= mask;
         self.bb[pc.piece_type().ordinal() as usize] ^= mask;
     }
@@ -309,7 +311,7 @@ impl Position {
             let mut empty_squares = 0;
 
             for file in 0..8 {
-                let square = Square::from_u32((rank * 8 + file) as u32);
+                let square = Square::new((rank * 8 + file) as u32);
                 let piece = self.piece_at(square);
 
                 if piece == Piece::none() {

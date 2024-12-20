@@ -45,8 +45,8 @@ impl CompressedMove {
             debug_assert!(move_.to != Square::NONE);
 
             packed = ((move_.mtype() as u16) << (16 - 2))
-                | ((move_.from.to_u32() as u16) << (16 - 2 - 6))
-                | ((move_.to.to_u32() as u16) << (16 - 2 - 6 - 6));
+                | ((move_.from.index() as u16) << (16 - 2 - 6))
+                | ((move_.to.index() as u16) << (16 - 2 - 6 - 6));
 
             if move_.mtype() == MoveType::Promotion {
                 debug_assert!(move_.promoted_piece() != Piece::none());
@@ -75,11 +75,11 @@ impl CompressedMove {
     }
 
     pub const fn from(&self) -> Square {
-        Square::from_u32(((self.packed >> (16 - 2 - 6)) & Self::SQUARE_MASK) as u32)
+        Square::new(((self.packed >> (16 - 2 - 6)) & Self::SQUARE_MASK) as u32)
     }
 
     pub const fn to(&self) -> Square {
-        Square::from_u32(((self.packed >> (16 - 2 - 6 - 6)) & Self::SQUARE_MASK) as u32)
+        Square::new(((self.packed >> (16 - 2 - 6 - 6)) & Self::SQUARE_MASK) as u32)
     }
 
     pub fn promoted_piece(&self) -> Piece {
