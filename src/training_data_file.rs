@@ -29,7 +29,7 @@ impl CompressedTrainingDataFile {
             .write(true)
             .create(true)
             .append(append)
-            .open(&path)?;
+            .open(path)?;
 
         Ok(Self { file })
     }
@@ -44,15 +44,12 @@ impl CompressedTrainingDataFile {
     // }
 
     pub fn has_next_chunk(&mut self) -> bool {
-        match self.file.stream_position() {
-            Ok(pos) => {
-                if let Ok(len) = self.file.seek(SeekFrom::End(0)) {
-                    if self.file.seek(SeekFrom::Start(pos)).is_ok() {
-                        return pos < len;
-                    }
+        if let Ok(pos) = self.file.stream_position() {
+            if let Ok(len) = self.file.seek(SeekFrom::End(0)) {
+                if self.file.seek(SeekFrom::Start(pos)).is_ok() {
+                    return pos < len;
                 }
             }
-            Err(_) => {}
         }
         false
     }
@@ -84,7 +81,7 @@ impl CompressedTrainingDataFile {
         self.file.read_exact(&mut buf)?;
 
         if &buf[0..4] != b"BINP" {
-            return Err(BinpackError::InvalidMagic).into();
+            return Err(BinpackError::InvalidMagic);
         }
 
         let chunk_size = u32::from_le_bytes(buf[4..8].try_into().unwrap());
@@ -92,8 +89,7 @@ impl CompressedTrainingDataFile {
         if chunk_size > MAX_CHUNK_SIZE {
             return Err(BinpackError::InvalidFormat(
                 "Chunk size larger than supported. Malformed file?".to_string(),
-            )
-            .into());
+            ));
         }
 
         Ok(Header { chunk_size })

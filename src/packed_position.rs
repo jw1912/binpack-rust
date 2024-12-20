@@ -82,7 +82,7 @@ impl PackedPosition {
         };
 
         let mut squares_iter = self.occupied.iter();
-        for (_, chunk) in self.packed_state.iter().enumerate() {
+        for chunk in self.packed_state.iter() {
             if let Some(sq) = squares_iter.next() {
                 decompress_piece(sq, chunk & 0xF);
             } else {

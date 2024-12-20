@@ -44,7 +44,7 @@ impl<'a> PackedMoveScoreListReader<'a> {
         self.entry.score = score;
         self.entry.ply += 1;
         self.entry.result = -self.entry.result;
-        return self.entry;
+        self.entry
     }
 
     pub fn next_move_score(&mut self) -> (Move, i16) {

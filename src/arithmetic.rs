@@ -69,7 +69,7 @@ pub fn nth_set_bit_index(v: u64, n: u64) -> u32 {
 }
 
 pub fn unsigned_to_signed(r: u16) -> i16 {
-    let mut v = (r << 15) | (r >> 1);
+    let mut v = r.rotate_right(1);
     if v & 0x8000 != 0 {
         v ^= 0x7FFF;
     }

@@ -16,6 +16,12 @@ pub struct PackedMoveScoreList {
     last_score: i16,
 }
 
+impl Default for PackedMoveScoreList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PackedMoveScoreList {
     pub fn new() -> Self {
         Self {
@@ -142,7 +148,7 @@ impl PackedMoveScoreList {
                 let attacks_size = attacks.count();
                 let num_castling_rights = (castling_rights & our_castling_rights_mask).count_ones();
 
-                let num_moves = attacks_size + num_castling_rights as u32;
+                let num_moves = attacks_size + num_castling_rights;
                 let mut move_id;
 
                 if move_.mtype() == MoveType::Castle {
@@ -204,7 +210,7 @@ fn signed_to_unsigned(a: i16) -> u16 {
     if r & 0x8000 != 0 {
         r ^= 0x7FFF;
     }
-    (r << 1) | (r >> 15)
+    r.rotate_left(1)
 }
 
 fn before(_sq: Square) -> Bitboard {

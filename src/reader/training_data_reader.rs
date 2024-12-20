@@ -112,7 +112,7 @@ impl CompressedTrainingDataEntryReader {
                     PackedMoveScoreListReader<'_>,
                     PackedMoveScoreListReader<'static>,
                 >(PackedMoveScoreListReader::new(
-                    entry.clone(),
+                    entry,
                     chunk_ref,
                     num_plies,
                 ))
@@ -126,7 +126,7 @@ impl CompressedTrainingDataEntryReader {
         entry
     }
 
-    fn fetch_next_chunk_if_needed(&mut self) -> () {
+    fn fetch_next_chunk_if_needed(&mut self) {
         if self.offset + std::mem::size_of::<PackedTrainingDataEntry>() + 2 > self.chunk.len() {
             if self.input_file.has_next_chunk() {
                 let chunk = self.input_file.read_next_chunk().unwrap();

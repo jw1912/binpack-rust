@@ -20,6 +20,12 @@ pub struct Position {
     enpassant: Square, // En passant target square
 }
 
+impl Default for Position {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Position {
     pub fn new() -> Self {
         Self {
@@ -50,9 +56,7 @@ impl Position {
     }
 
     pub fn pieces_bb_color(&self, color: Color, pt: PieceType) -> Bitboard {
-        let bb = Bitboard::new(self.bb_color[color as usize] & self.bb[pt.ordinal() as usize]);
-
-        bb
+        Bitboard::new(self.bb_color[color as usize] & self.bb[pt.ordinal() as usize])
     }
 
     pub fn piece_at(&self, square: Square) -> Piece {
@@ -191,7 +195,7 @@ impl Position {
                 let mut enemy_mask = ep_mask & enemy_mask;
 
                 while enemy_mask != Bitboard::new(0) {
-                    let enemy_sq = Square::new(enemy_mask.to_u64().trailing_zeros() as u32);
+                    let enemy_sq = Square::new(enemy_mask.to_u64().trailing_zeros());
                     enemy_mask = enemy_mask & Bitboard::new(enemy_mask.to_u64() - 1);
 
                     // move the enemy pawn
@@ -418,14 +422,14 @@ impl Position {
             return true;
         }
 
-        return false;
+        false
     }
 
     pub fn king_sq(&self, c: Color) -> Square {
         Square::new(
             self.pieces_bb_color(c, PieceType::King)
                 .to_u64()
-                .trailing_zeros() as u32,
+                .trailing_zeros(),
         )
     }
 

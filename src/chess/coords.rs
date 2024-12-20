@@ -97,7 +97,7 @@ impl Square {
         let offset = files + ranks * FILE_CARDINALITY;
 
         let new_index = self.index as i32 + offset;
-        if new_index >= 0 && new_index < 64 {
+        if (0..64).contains(&new_index) {
             Some(Self {
                 index: new_index as u32,
             })
