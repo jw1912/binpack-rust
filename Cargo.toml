@@ -2,7 +2,8 @@
 name = "binpack-reader"
 version = "0.1.0"
 edition = "2021"
-license = "MIT"
+license = "GPL-3.0"
+repository = "https://github.com/Disservin/binpack-rust"
 
 [dependencies]
 byteorder = "1.5.0"
