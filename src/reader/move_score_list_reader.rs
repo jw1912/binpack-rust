@@ -91,14 +91,14 @@ impl<'a> PackedMoveScoreListReader<'a> {
         match piece_type {
             PieceType::Pawn => {
                 let promotion_rank = if side_to_move == Color::White {
-                    Rank::Seventh
+                    Rank::SEVENTH
                 } else {
-                    Rank::Second
+                    Rank::SECOND
                 };
                 let start_rank = if side_to_move == Color::White {
-                    Rank::Second
+                    Rank::SECOND
                 } else {
-                    Rank::Seventh
+                    Rank::SEVENTH
                 };
                 let forward = if side_to_move == Color::White {
                     FlatSquareOffset::new(0, 1)

@@ -77,14 +77,14 @@ impl PackedMoveScoreList {
         match piece_type {
             PieceType::Pawn => {
                 let second_to_last_rank = if side_to_move == Color::White {
-                    Rank::Seventh
+                    Rank::SEVENTH
                 } else {
-                    Rank::Second
+                    Rank::SECOND
                 };
                 let start_rank = if side_to_move == Color::White {
-                    Rank::Second
+                    Rank::SECOND
                 } else {
-                    Rank::Seventh
+                    Rank::SEVENTH
                 };
                 let forward = if side_to_move == Color::White {
                     FlatSquareOffset::new(0, 1)

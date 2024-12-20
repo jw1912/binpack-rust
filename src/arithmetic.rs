@@ -1,5 +1,5 @@
 #[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
-use std::arch::x86_64::{_pdep_u64, _tzcnt_u64};
+use std::arch::x86_64::_pdep_u64;
 
 #[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
 #[target_feature(enable = "bmi2")]
@@ -35,33 +35,37 @@ const fn create_lookup_table() -> [[u8; 8]; 256] {
 
 const NTH_SET_BIT_INDEX: [[u8; 8]; 256] = create_lookup_table();
 
+#[allow(unreachable_code)]
 #[inline]
-pub fn nth_set_bit_index(mut v: u64, mut n: u64) -> u32 {
+pub fn nth_set_bit_index(v: u64, n: u64) -> u32 {
     #[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
     unsafe {
         return nth_set_bit_index_bmi2(v, n);
     }
 
+    let mut value = v;
+    let mut count = n;
+
     let mut shift: u64 = 0;
-    let p = (v & 0xFFFFFFFF).count_ones() as u64;
-    let pmask = ((p > n) as u64).wrapping_sub(1);
-    v >>= 32 & pmask;
+    let p = (value & 0xFFFFFFFF).count_ones() as u64;
+    let pmask = ((p > count) as u64).wrapping_sub(1);
+    value >>= 32 & pmask;
     shift += 32 & pmask;
-    n -= p & pmask;
+    count -= p & pmask;
 
-    let p = (v & 0xFFFF).count_ones() as u64;
-    let pmask = ((p > n) as u64).wrapping_sub(1);
-    v >>= 16 & pmask;
+    let p = (value & 0xFFFF).count_ones() as u64;
+    let pmask = ((p > count) as u64).wrapping_sub(1);
+    value >>= 16 & pmask;
     shift += 16 & pmask;
-    n -= p & pmask;
+    count -= p & pmask;
 
-    let p = (v & 0xFF).count_ones() as u64;
-    let pmask = ((p > n) as u64).wrapping_sub(1);
-    v >>= 8 & pmask;
+    let p = (value & 0xFF).count_ones() as u64;
+    let pmask = ((p > count) as u64).wrapping_sub(1);
+    value >>= 8 & pmask;
     shift += 8 & pmask;
-    n -= p & pmask;
+    count -= p & pmask;
 
-    (NTH_SET_BIT_INDEX[(v & 0xFF) as usize][n as usize] as u64 + shift) as u32
+    (NTH_SET_BIT_INDEX[(value & 0xFF) as usize][count as usize] as u64 + shift) as u32
 }
 
 pub fn unsigned_to_signed(r: u16) -> i16 {

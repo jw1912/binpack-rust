@@ -210,14 +210,14 @@ impl File {
 }
 
 impl Rank {
-    pub const First: Self = Self { index: 0 };
-    pub const Second: Self = Self { index: 1 };
-    pub const Third: Self = Self { index: 2 };
-    pub const Fourth: Self = Self { index: 3 };
-    pub const Fifth: Self = Self { index: 4 };
-    pub const Sixth: Self = Self { index: 5 };
-    pub const Seventh: Self = Self { index: 6 };
-    pub const Eighth: Self = Self { index: 7 };
+    pub const FIRST: Self = Self { index: 0 };
+    pub const SECOND: Self = Self { index: 1 };
+    pub const THIRD: Self = Self { index: 2 };
+    pub const FOURTH: Self = Self { index: 3 };
+    pub const FIFTH: Self = Self { index: 4 };
+    pub const SIXTH: Self = Self { index: 5 };
+    pub const SEVENTH: Self = Self { index: 6 };
+    pub const EIGHTH: Self = Self { index: 7 };
 
     pub const fn new(index: u32) -> Self {
         Self { index }

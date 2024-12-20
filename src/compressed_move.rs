@@ -84,7 +84,7 @@ impl CompressedMove {
 
     pub fn promoted_piece(&self) -> Piece {
         if self.move_type() == MoveType::Promotion {
-            let color = if self.to().rank() == Rank::First {
+            let color = if self.to().rank() == Rank::FIRST {
                 Color::Black
             } else {
                 Color::White

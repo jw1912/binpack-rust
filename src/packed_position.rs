@@ -46,11 +46,11 @@ impl PackedPosition {
                 }
                 12 => {
                     let rank = sq.rank();
-                    if rank == Rank::Fourth {
+                    if rank == Rank::FOURTH {
                         pos.place(Piece::WhitePawn, sq);
                         pos.set_ep_square_unchecked(sq + FlatSquareOffset::new(0, -1));
                     } else {
-                        // rank == Rank::Fifth
+                        // rank == Rank::FIFTH
                         pos.place(Piece::BlackPawn, sq);
                         pos.set_ep_square_unchecked(sq + FlatSquareOffset::new(0, 1));
                     }
