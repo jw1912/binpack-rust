@@ -9,3 +9,7 @@ If your machine has the fast BMI2 instruction set (Zen 3+), you should enable th
 ```bash
 RUSTFLAGS="-C target-feature=+bmi2" cargo build --release
 ```
+
+## Performance Comparison
+
+Idk
