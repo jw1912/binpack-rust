@@ -1,17 +1,19 @@
-use crate::arithmetic::{nth_set_bit_index, unsigned_to_signed};
-
-use crate::chess::attacks::Attacks;
-use crate::chess::bitboard::Bitboard;
-use crate::chess::castling_rights::{CastleType, CastlingRights, CastlingTraits};
-use crate::chess::color::Color;
-use crate::chess::coords::Rank;
-use crate::chess::coords::{FlatSquareOffset, Square};
-use crate::chess::piece::Piece;
-use crate::chess::piecetype::PieceType;
-use crate::chess::r#move::Move;
+use crate::{
+    arithmetic::{nth_set_bit_index, unsigned_to_signed},
+    chess::{
+        attacks::Attacks,
+        bitboard::Bitboard,
+        castling_rights::{CastleType, CastlingRights, CastlingTraits},
+        color::Color,
+        coords::{FlatSquareOffset, Rank, Square},
+        piece::Piece,
+        piecetype::PieceType,
+        r#move::Move,
+    },
+    training_data_entry::TrainingDataEntry,
+};
 
 use super::bitreader::BitReader;
-use super::training_data_reader::TrainingDataEntry;
 
 #[derive(Debug)]
 pub struct PackedMoveScoreListReader<'a> {

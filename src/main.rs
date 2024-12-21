@@ -12,16 +12,13 @@ fn main() {
     .unwrap();
 
     let mut count: u64 = 0;
-    let mut stats: u64 = 0;
 
     let t0 = std::time::Instant::now();
 
     while reader.has_next() {
-        let entry = reader.next();
+        let _entry = reader.next();
 
         count += 1;
-
-        stats += entry.ply as u64;
 
         // println!("entry:");
         // println!("{}", entry.pos.fen());
@@ -31,21 +28,72 @@ fn main() {
         // println!("result {}", entry.result);
         // println!("\n");
 
-        // println!("count: {}", count);
-
         if count % 10000000 == 0 {
             let t1 = std::time::Instant::now();
             let elapsed = t1.duration_since(t0).as_millis() + 1;
+
             print!(
                 "count: {} elapsed: {} entries/s: {}\r",
                 count,
                 elapsed,
                 (count * 1000) as u128 / elapsed
             );
+
             let _ = std::io::stdout().flush();
         }
     }
 
     println!("count: {}", count);
-    println!("stats: {}", stats);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // #[test]
+    // fn test_reader() {
+    //     let mut reader = CompressedTrainingDataEntryReader::new(
+    //         "/mnt/g/stockfish-data/test80-2024/test80-2024-06-jun-2tb7p.min-v2.v6.binpack",
+    //     )
+    //     .unwrap();
+
+    //     let mut count: u64 = 0;
+    //     let mut score: i64 = 0;
+
+    //     while reader.has_next() {
+    //         let entry = reader.next();
+
+    //         count += 1;
+
+    //         score += entry.score as i64;
+
+    //         if count == 100000 {
+    //             println!("count: {}", count);
+    //             println!("score: {}", score);
+    //             break;
+    //         }
+    //     }
+    // }
+
+    #[test]
+    fn test_reader_simple() {
+        let mut reader = CompressedTrainingDataEntryReader::new("./test/ep1.binpack").unwrap();
+
+        let mut count: u64 = 0;
+        let mut score: i64 = 0;
+
+        while reader.has_next() {
+            let entry = reader.next();
+
+            count += 1;
+
+            score += entry.score as i64;
+
+            if count == 100000 {
+                println!("count: {}", count);
+                println!("score: {}", score);
+                break;
+            }
+        }
+    }
 }

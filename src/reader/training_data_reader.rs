@@ -1,13 +1,11 @@
 use std::io::{self};
 use thiserror::Error;
 
-use crate::arithmetic::unsigned_to_signed;
-use crate::binpack_error::BinpackError;
-use crate::chess::position::Position;
-use crate::chess::r#move::Move;
-use crate::compressed_move::CompressedMove;
-use crate::packed_position::PackedPosition;
-use crate::training_data_file::CompressedTrainingDataFile;
+use crate::{
+    binpack_error::BinpackError,
+    training_data_entry::{PackedTrainingDataEntry, TrainingDataEntry},
+    training_data_file::CompressedTrainingDataFile,
+};
 
 use super::move_score_list_reader::PackedMoveScoreListReader;
 
@@ -101,7 +99,8 @@ impl CompressedTrainingDataEntryReader {
             ((self.chunk[self.offset] as u16) << 8) | (self.chunk[self.offset + 1] as u16);
         self.offset += 2;
 
-        let entry = unpack_entry(&packed);
+        // let entry = unpack_entry(&packed);
+        let entry = packed.unpack_entry();
 
         if num_plies > 0 {
             let chunk_ref = &self.chunk[self.offset..];
@@ -111,11 +110,7 @@ impl CompressedTrainingDataEntryReader {
                 std::mem::transmute::<
                     PackedMoveScoreListReader<'_>,
                     PackedMoveScoreListReader<'static>,
-                >(PackedMoveScoreListReader::new(
-                    entry,
-                    chunk_ref,
-                    num_plies,
-                ))
+                >(PackedMoveScoreListReader::new(entry, chunk_ref, num_plies))
             };
 
             self.movelist_reader = Some(OwnedMoveScoreListReader { reader });
@@ -137,72 +132,6 @@ impl CompressedTrainingDataEntryReader {
             }
         }
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct TrainingDataEntry {
-    pub pos: Position,
-    pub mv: Move,
-    pub score: i16,
-    pub ply: u16,
-    pub result: i16,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct PackedTrainingDataEntry {
-    pub data: [u8; 32],
-}
-
-impl PackedTrainingDataEntry {
-    pub fn copy_from_slice(&mut self, slice: &[u8]) {
-        self.data.copy_from_slice(slice);
-    }
-
-    fn read_u16_be(&self, offset: usize) -> u16 {
-        ((self.data[offset] as u16) << 8) | (self.data[offset + 1] as u16)
-    }
-}
-
-fn unpack_entry(packed: &PackedTrainingDataEntry) -> TrainingDataEntry {
-    let mut offset = 0;
-
-    // Read and decompress position
-    let compressed_pos = PackedPosition::read_from_big_endian(&packed.data[offset..]);
-    let mut pos = compressed_pos.decompress();
-    offset += std::mem::size_of::<PackedPosition>();
-
-    // Read and decompress move
-    let compressed_move = CompressedMove::read_from_big_endian(&packed.data[offset..]);
-    let mv = compressed_move.decompress();
-    offset += std::mem::size_of::<CompressedMove>();
-
-    // Read score
-    let score = unsigned_to_signed(packed.read_u16_be(offset));
-    offset += 2;
-
-    // Read ply and result (packed together)
-    let pr = packed.read_u16_be(offset);
-    let ply = pr & 0x3FFF;
-    let result = unsigned_to_signed(pr >> 14);
-    offset += 2;
-
-    // Set position's ply
-    pos.set_ply(ply);
-
-    // Read and set rule50 counter
-    pos.set_rule50_counter(packed.read_u16_be(offset));
-
-    TrainingDataEntry {
-        pos,
-        mv,
-        score,
-        ply,
-        result,
-    }
-}
-
-impl Drop for CompressedTrainingDataEntryReader {
-    fn drop(&mut self) {}
 }
 
 #[cfg(test)]
