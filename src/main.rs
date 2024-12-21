@@ -32,10 +32,13 @@ fn main() {
             let t1 = std::time::Instant::now();
             let elapsed = t1.duration_since(t0).as_millis() + 1;
 
+            let percentage = reader.read_bytes() as f64 / reader.file_size() as f64 * 100.0;
+
             print!(
-                "count: {} elapsed: {} entries/s: {}\r",
+                "count: {} elapsed: {} progress: {} entries/s: {}\r",
                 count,
                 elapsed,
+                percentage,
                 (count * 1000) as u128 / elapsed
             );
 

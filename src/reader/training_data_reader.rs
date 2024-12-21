@@ -31,6 +31,7 @@ pub struct CompressedTrainingDataEntryReader {
     movelist_reader: Option<OwnedMoveScoreListReader>,
     input_file: CompressedTrainingDataFile,
     offset: usize,
+    file_size: u64,
     is_end: bool,
 }
 
@@ -48,6 +49,7 @@ impl CompressedTrainingDataEntryReader {
             movelist_reader: None,
             input_file: CompressedTrainingDataFile::new(path, false)?,
             offset: 0,
+            file_size: std::fs::metadata(path)?.len(),
             is_end: false,
         };
 
@@ -62,6 +64,16 @@ impl CompressedTrainingDataEntryReader {
         }
 
         Ok(reader)
+    }
+
+    /// Get the size of the file in bytes
+    pub fn file_size(&self) -> u64 {
+        self.file_size
+    }
+
+    /// Get how much of the file has been read so far
+    pub fn read_bytes(&self) -> u64 {
+        self.input_file.read_bytes()
     }
 
     pub fn has_next(&self) -> bool {

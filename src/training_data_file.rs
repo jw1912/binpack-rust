@@ -20,6 +20,7 @@ struct Header {
 #[derive(Debug)]
 pub struct CompressedTrainingDataFile {
     file: File,
+    read_bytes: u64,
 }
 
 impl CompressedTrainingDataFile {
@@ -31,7 +32,10 @@ impl CompressedTrainingDataFile {
             .append(append)
             .open(path)?;
 
-        Ok(Self { file })
+        Ok(Self {
+            file,
+            read_bytes: 0,
+        })
     }
 
     // pub fn append(&mut self, data: &[u8]) -> io::Result<()> {
@@ -42,6 +46,10 @@ impl CompressedTrainingDataFile {
     //     self.file.write_all(data)?;
     //     Ok(())
     // }
+
+    pub fn read_bytes(&self) -> u64 {
+        self.read_bytes
+    }
 
     pub fn has_next_chunk(&mut self) -> bool {
         if let Ok(pos) = self.file.stream_position() {
@@ -60,6 +68,9 @@ impl CompressedTrainingDataFile {
         let mut data = vec![0u8; (header.chunk_size) as usize];
 
         self.file.read_exact(&mut data)?;
+
+        self.read_bytes += header.chunk_size as u64;
+
         Ok(data)
     }
 
@@ -79,6 +90,8 @@ impl CompressedTrainingDataFile {
     fn read_chunk_header(&mut self) -> Result<Header> {
         let mut buf = [0u8; HEADER_SIZE];
         self.file.read_exact(&mut buf)?;
+
+        self.read_bytes += HEADER_SIZE as u64;
 
         if &buf[0..4] != b"BINP" {
             return Err(BinpackError::InvalidMagic);
