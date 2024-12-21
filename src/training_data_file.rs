@@ -89,7 +89,11 @@ impl CompressedTrainingDataFile {
 
     fn read_chunk_header(&mut self) -> Result<Header> {
         let mut buf = [0u8; HEADER_SIZE];
-        self.file.read_exact(&mut buf)?;
+
+        match self.file.read_exact(&mut buf) {
+            Ok(_) => (),
+            Err(_) => return Err(BinpackError::InvalidMagic),
+        }
 
         self.read_bytes += HEADER_SIZE as u64;
 
@@ -106,5 +110,120 @@ impl CompressedTrainingDataFile {
         }
 
         Ok(Header { chunk_size })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use io::Write;
+    use tempfile::NamedTempFile;
+
+    fn create_test_file(data: &[u8]) -> NamedTempFile {
+        let mut file = tempfile::NamedTempFile::new().unwrap();
+
+        // Manually write header
+        let mut header = [0u8; HEADER_SIZE];
+        header[0] = b'B';
+        header[1] = b'I';
+        header[2] = b'N';
+        header[3] = b'P';
+        header[4..8].copy_from_slice(&(data.len() as u32).to_le_bytes());
+
+        file.write_all(&header).unwrap();
+        file.write_all(data).unwrap();
+        file.flush().unwrap();
+
+        file
+    }
+
+    #[test]
+    fn test_new_file_creation() {
+        let temp_path = NamedTempFile::new().unwrap();
+        let file = CompressedTrainingDataFile::new(temp_path.path().to_str().unwrap(), false);
+        assert!(file.is_ok());
+    }
+
+    #[test]
+    fn test_read_valid_chunk() {
+        let test_data = b"Hello, World!";
+        let temp_file = create_test_file(test_data);
+
+        let mut file =
+            CompressedTrainingDataFile::new(temp_file.path().to_str().unwrap(), false).unwrap();
+        assert!(file.has_next_chunk());
+
+        let chunk = file.read_next_chunk().unwrap();
+        assert_eq!(chunk, test_data);
+        assert_eq!(file.read_bytes(), (HEADER_SIZE + test_data.len()) as u64);
+    }
+
+    #[test]
+    fn test_has_next_chunk() {
+        let test_data = b"Test Data";
+        let temp_file = create_test_file(test_data);
+
+        let mut file =
+            CompressedTrainingDataFile::new(temp_file.path().to_str().unwrap(), false).unwrap();
+        assert!(file.has_next_chunk());
+
+        let _ = file.read_next_chunk().unwrap();
+        assert!(!file.has_next_chunk());
+    }
+
+    #[test]
+    fn test_invalid_magic_number() {
+        let mut temp_file = NamedTempFile::new().unwrap();
+        temp_file.write_all(b"INVALID").unwrap();
+
+        let mut file =
+            CompressedTrainingDataFile::new(temp_file.path().to_str().unwrap(), false).unwrap();
+        match file.read_next_chunk() {
+            Err(BinpackError::InvalidMagic) => (),
+            _ => panic!("Expected InvalidMagic error"),
+        }
+    }
+
+    #[test]
+    fn test_chunk_size_too_large() {
+        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut header = [0u8; HEADER_SIZE];
+        header[0..4].copy_from_slice(b"BINP");
+        header[4..8].copy_from_slice(&(MAX_CHUNK_SIZE + 1).to_le_bytes());
+        temp_file.write_all(&header).unwrap();
+
+        let mut file =
+            CompressedTrainingDataFile::new(temp_file.path().to_str().unwrap(), false).unwrap();
+        match file.read_next_chunk() {
+            Err(BinpackError::InvalidFormat(_)) => (),
+            _ => panic!("Expected InvalidFormat error"),
+        }
+    }
+
+    #[test]
+    fn test_multiple_chunks() {
+        let mut temp_file = NamedTempFile::new().unwrap();
+        let chunks = vec![b"Chunk1", b"Chunk2", b"Chunk3"];
+
+        // Write multiple chunks
+        for chunk in &chunks {
+            let mut header = [0u8; HEADER_SIZE];
+            header[0..4].copy_from_slice(b"BINP");
+            header[4..8].copy_from_slice(&(chunk.len() as u32).to_le_bytes());
+            temp_file.write_all(&header).unwrap();
+            temp_file.write_all(*chunk).unwrap();
+        }
+        temp_file.flush().unwrap();
+
+        let mut file =
+            CompressedTrainingDataFile::new(temp_file.path().to_str().unwrap(), false).unwrap();
+
+        for expected_chunk in chunks {
+            assert!(file.has_next_chunk());
+            let chunk = file.read_next_chunk().unwrap();
+            assert_eq!(chunk, expected_chunk);
+        }
+
+        assert!(!file.has_next_chunk());
     }
 }
