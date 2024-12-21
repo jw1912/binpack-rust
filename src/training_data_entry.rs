@@ -2,7 +2,7 @@ use crate::{
     arithmetic::unsigned_to_signed,
     chess::{position::Position, r#move::Move},
     compressed_move::CompressedMove,
-    packed_position::PackedPosition,
+    compressed_position::CompressedPosition,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -32,9 +32,9 @@ impl PackedTrainingDataEntry {
         let mut offset = 0;
 
         // Read and decompress position
-        let compressed_pos = PackedPosition::read_from_big_endian(&self.data[offset..]);
+        let compressed_pos = CompressedPosition::read_from_big_endian(&self.data[offset..]);
         let mut pos = compressed_pos.decompress();
-        offset += std::mem::size_of::<PackedPosition>();
+        offset += std::mem::size_of::<CompressedPosition>();
 
         // Read and decompress move
         let compressed_move = CompressedMove::read_from_big_endian(&self.data[offset..]);

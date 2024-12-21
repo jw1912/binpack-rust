@@ -1,7 +1,7 @@
 mod arithmetic;
 mod chess;
 mod compressed_move;
-mod packed_position;
+mod compressed_position;
 mod training_data_file;
 
 pub mod binpack_error;

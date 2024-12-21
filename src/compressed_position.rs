@@ -8,12 +8,12 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy)]
-pub struct PackedPosition {
+pub struct CompressedPosition {
     occupied: Bitboard,
     packed_state: [u8; 16],
 }
 
-impl PackedPosition {
+impl CompressedPosition {
     pub fn read_from_big_endian(data: &[u8]) -> Self {
         let occupied = Bitboard::new(
             ((data[0] as u64) << 56)
