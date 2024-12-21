@@ -10,28 +10,14 @@ pub enum PieceType {
 }
 
 impl PieceType {
+    #[inline(always)]
     pub const fn from_ordinal(value: u8) -> Self {
-        match value {
-            0 => PieceType::Pawn,
-            1 => PieceType::Knight,
-            2 => PieceType::Bishop,
-            3 => PieceType::Rook,
-            4 => PieceType::Queen,
-            5 => PieceType::King,
-            6 => PieceType::None,
-            _ => panic!("Invalid piece type ordinal"),
-        }
+        debug_assert!(value < 7);
+        unsafe { std::mem::transmute(value) }
     }
 
+    #[inline(always)]
     pub const fn ordinal(&self) -> u8 {
-        match self {
-            PieceType::Pawn => 0,
-            PieceType::Knight => 1,
-            PieceType::Bishop => 2,
-            PieceType::Rook => 3,
-            PieceType::Queen => 4,
-            PieceType::King => 5,
-            PieceType::None => 6,
-        }
+        *self as u8
     }
 }

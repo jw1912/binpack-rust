@@ -26,6 +26,7 @@ impl Piece {
         Self { id: id as u8 }
     }
 
+    #[inline(always)]
     pub const fn none() -> Self {
         Self::new(PieceType::None, Color::White)
     }
@@ -36,10 +37,12 @@ impl Piece {
         }
     }
 
+    #[inline(always)]
     pub const fn piece_type(&self) -> PieceType {
         PieceType::from_ordinal(self.id >> 1)
     }
 
+    #[inline(always)]
     pub const fn color(&self) -> Color {
         Color::from_ordinal(self.id & 1)
     }
@@ -48,6 +51,7 @@ impl Piece {
         (self.piece_type(), self.color())
     }
 
+    #[inline(always)]
     pub const fn as_int(&self) -> usize {
         self.id as usize
     }

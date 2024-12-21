@@ -36,7 +36,7 @@ const fn create_lookup_table() -> [[u8; 8]; 256] {
 const NTH_SET_BIT_INDEX: [[u8; 8]; 256] = create_lookup_table();
 
 #[allow(unreachable_code)]
-#[inline]
+#[inline(always)]
 pub fn nth_set_bit_index(v: u64, n: u64) -> u32 {
     #[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
     unsafe {
@@ -68,12 +68,37 @@ pub fn nth_set_bit_index(v: u64, n: u64) -> u32 {
     (NTH_SET_BIT_INDEX[(value & 0xFF) as usize][count as usize] as u64 + shift) as u32
 }
 
+#[inline(always)]
 pub fn unsigned_to_signed(r: u16) -> i16 {
     let mut v = r.rotate_right(1);
     if v & 0x8000 != 0 {
         v ^= 0x7FFF;
     }
     v as i16
+}
+
+#[inline(always)]
+pub fn used_bits_safe(n: u64) -> usize {
+    if n == 0 {
+        return 0;
+    }
+
+    used_bits(n - 1) as usize
+}
+
+#[inline(always)]
+pub fn used_bits(n: u64) -> u64 {
+    if n == 0 {
+        return 0;
+    }
+
+    msb(n) as u64 + 1
+}
+
+#[inline(always)]
+pub fn msb(n: u64) -> u32 {
+    debug_assert!(n != 0);
+    63 ^ n.leading_zeros()
 }
 
 #[cfg(test)]

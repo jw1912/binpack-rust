@@ -1,5 +1,5 @@
 use crate::{
-    arithmetic::{nth_set_bit_index, unsigned_to_signed},
+    arithmetic::{nth_set_bit_index, unsigned_to_signed, used_bits_safe},
     chess::{
         attacks::Attacks,
         bitboard::Bitboard,
@@ -218,23 +218,3 @@ impl<'a> PackedMoveScoreListReader<'a> {
 }
 
 // Helper functions
-fn used_bits_safe(n: u64) -> usize {
-    if n == 0 {
-        return 0;
-    }
-
-    used_bits(n - 1) as usize
-}
-
-fn used_bits(n: u64) -> u64 {
-    if n == 0 {
-        return 0;
-    }
-
-    msb(n) as u64 + 1
-}
-
-fn msb(n: u64) -> u32 {
-    debug_assert!(n != 0);
-    63 ^ n.leading_zeros()
-}

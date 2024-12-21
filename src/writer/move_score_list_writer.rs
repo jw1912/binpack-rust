@@ -1,3 +1,4 @@
+use crate::arithmetic::used_bits_safe;
 use crate::binpack_error::Result;
 use crate::chess::attacks::Attacks;
 use crate::chess::bitboard::Bitboard;
@@ -184,26 +185,6 @@ impl PackedMoveScoreList {
 }
 
 // Helper functions
-fn used_bits_safe(n: u64) -> usize {
-    if n == 0 {
-        return 0;
-    }
-
-    used_bits(n - 1) as usize
-}
-
-fn used_bits(n: u64) -> u64 {
-    if n == 0 {
-        return 0;
-    }
-
-    msb(n) as u64 + 1
-}
-
-fn msb(n: u64) -> u32 {
-    debug_assert!(n != 0);
-    63 ^ n.leading_zeros()
-}
 
 fn signed_to_unsigned(a: i16) -> u16 {
     let mut r = a as u16;

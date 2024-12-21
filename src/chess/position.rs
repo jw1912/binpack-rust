@@ -11,9 +11,10 @@ use crate::chess::{
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
-    bb: [u64; 6],       // Bitboards for each piece type (PNBRQK)
-    bb_color: [u64; 2], // Bitboards for each color (White, Black)
-    stm: Color,         // Side to move
+    bb: [u64; 6],        // Bitboards for each piece type (PNBRQK)
+    bb_color: [u64; 2],  // Bitboards for each color (White, Black)
+    pieces: [Piece; 64], // Piece list
+    stm: Color,          // Side to move
     castling_rights: CastlingRights,
     halfm: u8,         // Halfmove clock for 50-move rule
     fullm: u16,        // Fullmove number
@@ -31,6 +32,7 @@ impl Position {
         Self {
             bb: [0; 6],
             bb_color: [0; 2],
+            pieces: [Piece::none(); 64],
             stm: Color::White,
             castling_rights: CastlingRights::NONE,
             halfm: 0,
@@ -61,21 +63,8 @@ impl Position {
 
     pub fn piece_at(&self, square: Square) -> Piece {
         debug_assert!(square != Square::NONE);
-        let sq_bb = 1u64 << square.index();
 
-        for pt in 0..6 {
-            if (self.bb[pt] & sq_bb) != 0 {
-                let color = if (self.bb_color[0] & sq_bb) != 0 {
-                    Color::White
-                } else {
-                    Color::Black
-                };
-
-                return Piece::new(PieceType::from_ordinal(pt as u8), color);
-            }
-        }
-
-        Piece::none()
+        self.pieces[square.index() as usize]
     }
 
     pub fn castling_rights(&self) -> CastlingRights {
@@ -100,24 +89,24 @@ impl Position {
         debug_assert!(piece != Piece::none());
 
         // clear piece from start
-        self.toggle(self.stm, piece, from);
+        self.remove_piece(self.stm, piece, from);
 
         // capture piece
         if genuine_capture {
-            self.toggle(!self.stm, captured, to);
+            self.remove_piece(!self.stm, captured, to);
         }
 
         if mv.mtype() == MoveType::Promotion {
             let promotion = mv.promoted_piece();
-            self.toggle(self.stm, promotion, to);
+            self.place_piece(self.stm, promotion, to);
         } else if mv.mtype() == MoveType::EnPassant {
             debug_assert!(piece.piece_type() == PieceType::Pawn,);
 
             let captured_sq = Square::new(to.index() ^ 8);
-            self.toggle(!self.stm, self.piece_at(captured_sq), captured_sq);
-            self.toggle(self.stm, piece, to);
+            self.remove_piece(!self.stm, self.piece_at(captured_sq), captured_sq);
+            self.place_piece(self.stm, piece, to);
         } else if mv.mtype() == MoveType::Normal {
-            self.toggle(self.stm, piece, to);
+            self.place_piece(self.stm, piece, to);
         } else if mv.mtype() == MoveType::Castle {
             if mv.castle_type() == CastleType::Short {
                 let rook_to = if self.stm == Color::White {
@@ -134,9 +123,9 @@ impl Position {
 
                 let rook = self.piece_at(to);
 
-                self.toggle(self.stm, rook, to);
-                self.toggle(self.stm, rook, rook_to);
-                self.toggle(self.stm, piece, king_to);
+                self.remove_piece(self.stm, rook, to);
+                self.place_piece(self.stm, rook, rook_to);
+                self.place_piece(self.stm, piece, king_to);
             } else {
                 let rook_to = if self.stm == Color::White {
                     Square::D1
@@ -152,9 +141,9 @@ impl Position {
 
                 let rook = self.piece_at(to);
 
-                self.toggle(self.stm, rook, to);
-                self.toggle(self.stm, rook, rook_to);
-                self.toggle(self.stm, piece, king_to);
+                self.remove_piece(self.stm, rook, to);
+                self.place_piece(self.stm, rook, rook_to);
+                self.place_piece(self.stm, piece, king_to);
             }
         }
 
@@ -202,11 +191,11 @@ impl Position {
 
                     // move the enemy pawn
                     let enemy_pawn = self.piece_at(enemy_sq);
-                    self.toggle(!self.stm, enemy_pawn, enemy_sq);
-                    self.toggle(!self.stm, enemy_pawn, ep);
+                    self.remove_piece(!self.stm, enemy_pawn, enemy_sq);
+                    self.place_piece(!self.stm, enemy_pawn, ep);
 
                     // remove our pawn
-                    self.toggle(self.stm, piece, to);
+                    self.remove_piece(self.stm, piece, to);
 
                     // check if the side which made the move is in check
                     let is_checked = self.is_checked(!self.stm);
@@ -214,11 +203,11 @@ impl Position {
                     // undo the move
 
                     // move the enemy pawn
-                    self.toggle(!self.stm, enemy_pawn, enemy_sq);
-                    self.toggle(!self.stm, enemy_pawn, ep);
+                    self.place_piece(!self.stm, enemy_pawn, enemy_sq);
+                    self.remove_piece(!self.stm, enemy_pawn, ep);
 
                     // place our pawn
-                    self.toggle(self.stm, piece, to);
+                    self.place_piece(self.stm, piece, to);
 
                     if !is_checked {
                         self.enpassant = ep;
@@ -284,23 +273,34 @@ impl Position {
         self.halfm = counter as u8;
     }
 
+    #[inline(always)]
     pub fn place(&mut self, pc: Piece, sq: Square) {
         debug_assert!(pc != Piece::none());
         debug_assert!(sq != Square::NONE);
 
-        let mask = 1u64 << (sq.index());
-        self.bb_color[pc.color() as usize] |= mask;
-        self.bb[pc.piece_type().ordinal() as usize] |= mask;
+        self.place_piece(pc.color(), pc, sq);
     }
 
     #[inline(always)]
-    fn toggle(&mut self, side: Color, pc: Piece, sq: Square) {
+    fn place_piece(&mut self, side: Color, pc: Piece, sq: Square) {
+        debug_assert!(pc != Piece::none());
+        debug_assert!(sq != Square::NONE);
+
+        let mask = 1u64 << (sq.index());
+        self.bb_color[side as usize] |= mask;
+        self.bb[pc.piece_type().ordinal() as usize] |= mask;
+        self.pieces[sq.index() as usize] = pc;
+    }
+
+    #[inline(always)]
+    fn remove_piece(&mut self, side: Color, pc: Piece, sq: Square) {
         debug_assert!(pc != Piece::none());
         debug_assert!(sq != Square::NONE);
 
         let mask = 1u64 << (sq.index());
         self.bb_color[side as usize] ^= mask;
         self.bb[pc.piece_type().ordinal() as usize] ^= mask;
+        self.pieces[sq.index() as usize] = Piece::none();
     }
 
     pub fn fen(&self) -> String {
