@@ -2,9 +2,8 @@ use std::io::{self};
 use thiserror::Error;
 
 use crate::{
-    binpack_error::BinpackError,
-    training_data_entry::{PackedTrainingDataEntry, TrainingDataEntry},
-    training_data_file::CompressedTrainingDataFile,
+    binpack_error::BinpackError, packed_entry::PackedTrainingDataEntry,
+    data_entry::TrainingDataEntry, compressed_data_file::CompressedTrainingDataFile,
 };
 
 use super::move_score_list_reader::PackedMoveScoreListReader;

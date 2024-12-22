@@ -1,18 +1,7 @@
 use crate::{
-    arithmetic::unsigned_to_signed,
-    chess::{position::Position, r#move::Move},
-    compressed_move::CompressedMove,
-    compressed_position::CompressedPosition,
+    arithmetic::unsigned_to_signed, compressed_move::CompressedMove,
+    compressed_position::CompressedPosition, data_entry::TrainingDataEntry,
 };
-
-#[derive(Debug, Clone, Copy)]
-pub struct TrainingDataEntry {
-    pub pos: Position,
-    pub mv: Move,
-    pub score: i16,
-    pub ply: u16,
-    pub result: i16,
-}
 
 #[derive(Debug, Default, Clone)]
 pub struct PackedTrainingDataEntry {
