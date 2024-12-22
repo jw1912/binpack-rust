@@ -8,10 +8,35 @@ pub struct Bitboard {
 }
 
 impl Bitboard {
+    pub const fn new(bits: u64) -> Self {
+        Bitboard { data: bits }
+    }
+
+    /// Returns the number of set bits (popcount)
     #[must_use]
     #[inline(always)]
     pub fn count(&self) -> u32 {
         self.data.count_ones()
+    }
+
+    /// Returns the least significant bit
+    #[inline(always)]
+    pub fn lsb(&self) -> Square {
+        Square::new(self.data.trailing_zeros())
+    }
+
+    /// Returns the most significant bit
+    #[inline(always)]
+    pub fn msb(&self) -> Square {
+        Square::new(63 - self.data.leading_zeros())
+    }
+
+    /// Pops the least significant bit and returns it
+    #[inline(always)]
+    pub fn pop(&mut self) -> Square {
+        let lsb = self.lsb();
+        self.data &= self.data - 1;
+        lsb
     }
 
     pub fn get(&self, index: u32) -> bool {
@@ -36,10 +61,6 @@ impl Bitboard {
 
     pub fn sq_set(&self, index: Square) -> bool {
         self.data & (1 << index.index()) != 0
-    }
-
-    pub const fn new(bits: u64) -> Self {
-        Bitboard { data: bits }
     }
 
     pub fn from_u64(data: u64) -> Self {
@@ -83,26 +104,22 @@ impl Bitboard {
     }
 
     pub fn iter(&self) -> BitboardIterator {
-        BitboardIterator {
-            remaining: self.data,
-        }
+        BitboardIterator { remaining: *self }
     }
 }
 
 pub struct BitboardIterator {
-    remaining: u64,
+    remaining: Bitboard,
 }
 
 impl Iterator for BitboardIterator {
     type Item = Square;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.remaining == 0 {
+        if self.remaining.bits() == 0 {
             None
         } else {
-            let index = self.remaining.trailing_zeros();
-            self.remaining &= self.remaining - 1;
-            Some(Square::new(index))
+            Some(self.remaining.pop())
         }
     }
 }
@@ -120,6 +137,15 @@ impl BitAnd for Bitboard {
 
     fn bitand(self, rhs: Self) -> Self::Output {
         Self {
+            data: self.data & rhs.data,
+        }
+    }
+}
+
+impl BitAnd<&Bitboard> for &Bitboard {
+    type Output = Bitboard;
+    fn bitand(self, rhs: &Bitboard) -> Bitboard {
+        Bitboard {
             data: self.data & rhs.data,
         }
     }

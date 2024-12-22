@@ -395,46 +395,24 @@ impl Position {
 
     /// Check if a square is attacked by the given color
     pub fn is_attacked(&self, sq: Square, c: Color) -> bool {
-        if (Attacks::pawn(!c, sq) & self.pieces_bb_color(c, PieceType::Pawn)).bits() > 0 {
-            return true;
-        }
+        let pieces = |piece_type| self.pieces_bb_color(c, piece_type);
+        let occupied = self.occupied();
 
-        if (Attacks::knight(sq) & self.pieces_bb_color(c, PieceType::Knight)).bits() > 0 {
-            return true;
-        }
+        // fast stuff first
 
-        if (Attacks::king(sq) & self.pieces_bb_color(c, PieceType::King)).bits() > 0 {
-            return true;
-        }
-
-        if (Attacks::bishop(sq, self.occupied())
-            & (self.pieces_bb_color(c, PieceType::Bishop)
-                | self.pieces_bb_color(c, PieceType::Queen)))
+        (Attacks::pawn(!c, sq) & pieces(PieceType::Pawn)
+            | Attacks::knight(sq) & pieces(PieceType::Knight)
+            | Attacks::king(sq) & pieces(PieceType::King)
+            | Attacks::bishop(sq, occupied)
+                & (pieces(PieceType::Bishop) | pieces(PieceType::Queen))
+            | Attacks::rook(sq, occupied) & (pieces(PieceType::Rook) | pieces(PieceType::Queen)))
         .bits()
             > 0
-        {
-            return true;
-        }
-
-        if (Attacks::rook(sq, self.occupied())
-            & (self.pieces_bb_color(c, PieceType::Rook)
-                | self.pieces_bb_color(c, PieceType::Queen)))
-        .bits()
-            > 0
-        {
-            return true;
-        }
-
-        false
     }
 
     /// Returns the square of the king of the given color
     pub fn king_sq(&self, c: Color) -> Square {
-        Square::new(
-            self.pieces_bb_color(c, PieceType::King)
-                .bits()
-                .trailing_zeros(),
-        )
+        self.pieces_bb_color(c, PieceType::King).lsb()
     }
 
     /// Returns true if the given color is in check
