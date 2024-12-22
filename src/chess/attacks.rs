@@ -2,7 +2,7 @@ use crate::chess::{
     bitboard::Bitboard, color::Color, coords::Square, hyperbola::HyperbolaQsc, piecetype::PieceType,
 };
 
-const HYPERBOLA: HyperbolaQsc = HyperbolaQsc::new();
+static HYPERBOLA: HyperbolaQsc = HyperbolaQsc::new();
 
 pub struct Attacks;
 
