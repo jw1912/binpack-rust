@@ -22,7 +22,7 @@ fn main() {
     .unwrap();
 
     while reader.has_next() {
-        let _entry = reader.next();
+        let entry = reader.next();
 
         println!("entry:");
         println!("fen {}", entry.pos.fen());
