@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use binpack_reader::reader::training_data_reader::CompressedTrainingDataEntryReader;
+use binpack::reader::training_data_reader::CompressedTrainingDataEntryReader;
 
 fn main() {
     let mut reader = CompressedTrainingDataEntryReader::new(
