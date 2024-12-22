@@ -43,3 +43,9 @@ fn main() {
 ## Performance Comparison
 
 Slightly faster when compiled with bmi2 because of _pdep_u64 trick which is missing in the upstream version.
+
+## License
+
+GNU General Public License v3.0
+
+<https://www.gnu.org/licenses/gpl-3.0.html>

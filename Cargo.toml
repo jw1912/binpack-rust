@@ -1,9 +1,11 @@
 [package]
-name = "binpack-reader"
+name = "binpack"
 version = "0.1.0"
+description = "Library to read Stockfish Binpacks"
 edition = "2021"
 license = "GPL-3.0"
 repository = "https://github.com/Disservin/binpack-rust"
+readme = "README.md"
 
 [dependencies]
 byteorder = "1.5.0"
@@ -14,7 +16,7 @@ tempfile = "3"
 path = "src/lib.rs"
 
 [[bin]]
-name = "binpackreader"
+name = "binpack"
 path = "src/main.rs"
 
 [profile.release]
