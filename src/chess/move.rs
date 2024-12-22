@@ -36,6 +36,10 @@ impl MoveType {
     }
 }
 
+/// Castling is encoded as king captures rook
+/// e.g. E1G1 is encoded as E1H1
+/// EP is encoded as a "normal" pawn move, move.to is the square the pawn moves to
+/// and as such empty. The captured pawn square is move.to ^ 8
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Move {
     pub from: Square,

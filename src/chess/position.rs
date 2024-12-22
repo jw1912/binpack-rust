@@ -11,14 +11,22 @@ use crate::chess::{
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
-    bb: [u64; 6],        // Bitboards for each piece type (PNBRQK)
-    bb_color: [u64; 2],  // Bitboards for each color (White, Black)
-    pieces: [Piece; 64], // Piece list
-    stm: Color,          // Side to move
+    /// Bitboards for each piece type (PNBRQK)
+    bb: [u64; 6],
+    /// Bitboards for each color (White, Black)
+    bb_color: [u64; 2],
+    /// Piece list
+    pieces: [Piece; 64],
+    /// Side to move
+    stm: Color,
+    /// Castling rights
     castling_rights: CastlingRights,
-    halfm: u8,         // Halfmove clock for 50-move rule
-    fullm: u16,        // Fullmove number
-    enpassant: Square, // En passant target square
+    /// Halfmove clock for 50-move rule
+    halfm: u8,
+    /// Fullmove number
+    fullm: u16,
+    /// En passant target square
+    enpassant: Square,
 }
 
 impl Default for Position {
@@ -41,14 +49,17 @@ impl Position {
         }
     }
 
+    /// Returns the current side to move's color
     pub fn side_to_move(&self) -> Color {
         self.stm
     }
 
+    /// Returns a bitboard with all occupied squares
     pub fn occupied(&self) -> Bitboard {
         Bitboard::new(self.bb_color[0] | self.bb_color[1])
     }
 
+    /// Returns the bitboard of all pieces of a given color
     pub fn pieces_bb(&self, color: Color) -> Bitboard {
         let bb = Bitboard::new(self.bb_color[color as usize]);
 
@@ -57,24 +68,29 @@ impl Position {
         bb
     }
 
+    /// Returns the bitboard of all pieces of a given color and piece type
     pub fn pieces_bb_color(&self, color: Color, pt: PieceType) -> Bitboard {
         Bitboard::new(self.bb_color[color as usize] & self.bb[pt.ordinal() as usize])
     }
 
+    /// Returns the piece at a given square, Piece::NONE if the square is empty
     pub fn piece_at(&self, square: Square) -> Piece {
         debug_assert!(square != Square::NONE);
 
         self.pieces[square.index() as usize]
     }
 
+    /// Returns the castling rights
     pub fn castling_rights(&self) -> CastlingRights {
         self.castling_rights
     }
 
+    /// Returns the en passant square, or Square::NONE if there is none
     pub fn ep_square(&self) -> Square {
         self.enpassant
     }
 
+    /// Make a legal move on the board
     pub fn do_move(&mut self, mv: Move) {
         debug_assert!(self.bb[PieceType::King.ordinal() as usize].count_ones() == 2);
 
@@ -223,32 +239,11 @@ impl Position {
         debug_assert!(self.bb[PieceType::King.ordinal() as usize].count_ones() == 2);
     }
 
-    fn update_castling_rights(&mut self, from: Square, to: Square) {
-        // Remove castling rights if king or rook moves
-        if from == Square::E1 || to == Square::E1 {
-            self.castling_rights &= !CastlingRights::WHITE;
-        }
-        if from == Square::E8 || to == Square::E8 {
-            self.castling_rights &= !CastlingRights::BLACK;
-        }
-        if from == Square::A1 || to == Square::A1 {
-            self.castling_rights &= !CastlingRights::WHITE_QUEEN_SIDE;
-        }
-        if from == Square::H1 || to == Square::H1 {
-            self.castling_rights &= !CastlingRights::WHITE_KING_SIDE;
-        }
-        if from == Square::A8 || to == Square::A8 {
-            self.castling_rights &= !CastlingRights::BLACK_QUEEN_SIDE;
-        }
-        if from == Square::H8 || to == Square::H8 {
-            self.castling_rights &= !CastlingRights::BLACK_KING_SIDE;
-        }
-    }
-
     pub fn set_castling_rights(&mut self, rights: CastlingRights) {
         self.castling_rights = rights;
     }
 
+    /// No validation is done, use with caution
     pub fn set_ep_square_unchecked(&mut self, sq: Square) {
         self.enpassant = sq;
     }
@@ -273,6 +268,7 @@ impl Position {
         self.halfm = counter as u8;
     }
 
+    /// Places a piece on the board
     #[inline(always)]
     pub fn place(&mut self, pc: Piece, sq: Square) {
         debug_assert!(pc != Piece::none());
@@ -281,10 +277,12 @@ impl Position {
         self.place_piece(pc.color(), pc, sq);
     }
 
+    /// Places a piece on the board
     #[inline(always)]
     fn place_piece(&mut self, side: Color, pc: Piece, sq: Square) {
         debug_assert!(pc != Piece::none());
         debug_assert!(sq != Square::NONE);
+        debug_assert!(side == pc.color());
 
         let mask = 1u64 << (sq.index());
         self.bb_color[side as usize] |= mask;
@@ -292,6 +290,7 @@ impl Position {
         self.pieces[sq.index() as usize] = pc;
     }
 
+    /// Removes a piece from the board
     #[inline(always)]
     fn remove_piece(&mut self, side: Color, pc: Piece, sq: Square) {
         debug_assert!(pc != Piece::none());
@@ -303,6 +302,7 @@ impl Position {
         self.pieces[sq.index() as usize] = Piece::none();
     }
 
+    /// Returns the FEN representation of the position
     pub fn fen(&self) -> String {
         let mut fen = String::new();
 
@@ -393,6 +393,7 @@ impl Position {
         fen
     }
 
+    /// Check if a square is attacked by the given color
     pub fn is_attacked(&self, sq: Square, c: Color) -> bool {
         if (Attacks::pawn(!c, sq) & self.pieces_bb_color(c, PieceType::Pawn)).bits() > 0 {
             return true;
@@ -427,6 +428,7 @@ impl Position {
         false
     }
 
+    /// Returns the square of the king of the given color
     pub fn king_sq(&self, c: Color) -> Square {
         Square::new(
             self.pieces_bb_color(c, PieceType::King)
@@ -435,7 +437,30 @@ impl Position {
         )
     }
 
+    /// Returns true if the given color is in check
     pub fn is_checked(&self, c: Color) -> bool {
         self.is_attacked(self.king_sq(c), !c)
+    }
+
+    fn update_castling_rights(&mut self, from: Square, to: Square) {
+        // Remove castling rights if king or rook moves
+        if from == Square::E1 || to == Square::E1 {
+            self.castling_rights &= !CastlingRights::WHITE;
+        }
+        if from == Square::E8 || to == Square::E8 {
+            self.castling_rights &= !CastlingRights::BLACK;
+        }
+        if from == Square::A1 || to == Square::A1 {
+            self.castling_rights &= !CastlingRights::WHITE_QUEEN_SIDE;
+        }
+        if from == Square::H1 || to == Square::H1 {
+            self.castling_rights &= !CastlingRights::WHITE_KING_SIDE;
+        }
+        if from == Square::A8 || to == Square::A8 {
+            self.castling_rights &= !CastlingRights::BLACK_QUEEN_SIDE;
+        }
+        if from == Square::H8 || to == Square::H8 {
+            self.castling_rights &= !CastlingRights::BLACK_KING_SIDE;
+        }
     }
 }

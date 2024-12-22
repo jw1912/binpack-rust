@@ -2,7 +2,8 @@ use crate::chess::{color::Color, piecetype::PieceType};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Piece {
-    id: u8, // lowest bit is a color, 7 highest bits are a piece type
+    /// lowest bit is a color, 7 highest bits are a piece type
+    id: u8,
 }
 
 impl Piece {
