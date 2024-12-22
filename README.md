@@ -38,7 +38,7 @@ fn main() {
 }
 ```
 
-__If you are doing some counting keep in mind to use a `u64` type for the counter.__
+*If you are doing some counting keep in mind to use a `u64` type for the counter.*
 
 ## Performance Comparison
 
