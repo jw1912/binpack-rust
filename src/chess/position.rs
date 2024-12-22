@@ -68,6 +68,12 @@ impl Position {
         bb
     }
 
+    /// Returns the bitboard of all pieces of a given piece type
+    pub fn pieces_bb_type(&self, pt: PieceType) -> Bitboard {
+        debug_assert!(pt != PieceType::None);
+        Bitboard::new(self.bb[pt.ordinal() as usize])
+    }
+
     /// Returns the bitboard of all pieces of a given color and piece type
     pub fn pieces_bb_color(&self, color: Color, pt: PieceType) -> Bitboard {
         Bitboard::new(self.bb_color[color as usize] & self.bb[pt.ordinal() as usize])
