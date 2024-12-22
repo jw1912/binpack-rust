@@ -23,8 +23,10 @@ pub enum CompressedReaderError {
     BinpackError(#[from] BinpackError),
 }
 
-pub type Result<T> = std::result::Result<T, CompressedReaderError>;
+type Result<T> = std::result::Result<T, CompressedReaderError>;
 
+/// Reads Stockfish binpacks and returns a TrainingDataEntry
+/// for each encoded entry.
 #[derive(Debug)]
 pub struct CompressedTrainingDataEntryReader {
     chunk: Vec<u8>,
@@ -41,6 +43,8 @@ struct OwnedMoveScoreListReader {
 }
 
 impl CompressedTrainingDataEntryReader {
+    /// Create a new CompressedTrainingDataEntryReader,
+    /// reading from the file at the given path.
     pub fn new(path: &str) -> Result<Self> {
         let chunk = Vec::with_capacity(SUGGESTED_CHUNK_SIZE);
 
@@ -76,10 +80,12 @@ impl CompressedTrainingDataEntryReader {
         self.input_file.read_bytes()
     }
 
+    /// Check if there are more TrainingDataEntry to read
     pub fn has_next(&self) -> bool {
         !self.is_end
     }
 
+    /// Get the next TrainingDataEntry
     pub fn next(&mut self) -> TrainingDataEntry {
         if let Some(ref mut reader) = self.movelist_reader {
             let entry = reader.reader.next_entry();
@@ -111,7 +117,6 @@ impl CompressedTrainingDataEntryReader {
             ((self.chunk[self.offset] as u16) << 8) | (self.chunk[self.offset + 1] as u16);
         self.offset += 2;
 
-        // let entry = unpack_entry(&packed);
         let entry = packed.unpack_entry();
 
         if num_plies > 0 {
