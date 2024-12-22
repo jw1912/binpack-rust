@@ -1,7 +1,7 @@
-#[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
+#[cfg(all(target_arch = "x86_64", any(target_feature = "bmi2", feature = "bmi2")))]
 use std::arch::x86_64::_pdep_u64;
 
-#[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
+#[cfg(all(target_arch = "x86_64", any(target_feature = "bmi2", feature = "bmi2")))]
 #[target_feature(enable = "bmi2")]
 unsafe fn nth_set_bit_index_bmi2(v: u64, n: u64) -> u32 {
     _pdep_u64(1u64 << n, v).trailing_zeros() as u32
@@ -38,7 +38,7 @@ const NTH_SET_BIT_INDEX: [[u8; 8]; 256] = create_lookup_table();
 #[allow(unreachable_code)]
 #[inline(always)]
 pub fn nth_set_bit_index(v: u64, n: u64) -> u32 {
-    #[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
+    #[cfg(all(target_arch = "x86_64", any(target_feature = "bmi2", feature = "bmi2")))]
     unsafe {
         return nth_set_bit_index_bmi2(v, n);
     }

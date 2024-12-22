@@ -4,10 +4,17 @@ Rust port of the Stockfish binpack reader from the [C++ version](https://github.
 
 ## Compile
 
-If your machine has the fast BMI2 instruction set (Zen 3+), you should enable the feature flag.
+If your machine has the fast BMI2 instruction set (Zen 3+), you should enable the feature flag
 
 ```bash
-RUSTFLAGS="-C target-feature=+bmi2" cargo build --release
+cargo build --release --features bmi2;
+```
+
+or define it in your `Cargo.toml` file (change version).
+
+```
+[dependencies]
+binpack = { version = "0.1.0", features = ["bmi2"] }
 ```
 
 ## Usage
